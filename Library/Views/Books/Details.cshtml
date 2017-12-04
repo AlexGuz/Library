@@ -1,4 +1,4 @@
-﻿@model Library.Models.Book
+﻿@model LibraryDB.Models.Book
 
 @{
     ViewBag.Title = "Details";
@@ -11,11 +11,11 @@
     <hr />
     <dl class="dl-horizontal">
         <dt>
-            @Html.DisplayNameFor(model => model.Title)
+            @Html.DisplayNameFor(model => model.Unit.Title)
         </dt>
 
         <dd>
-            @Html.DisplayFor(model => model.Title)
+            @Html.DisplayFor(model => model.Unit.Title)
         </dd>
 
         <dt>
@@ -27,11 +27,11 @@
         </dd>
 
         <dt>
-            @Html.DisplayNameFor(model => model.Autor.AutorName)
+            @Html.DisplayNameFor(model => model.Unit.Autor.AutorName)
         </dt>
 
         <dd>
-            @Html.DisplayFor(model => model.Autor.AutorName)
+            @Html.DisplayFor(model => model.Unit.Autor.AutorName)
         </dd>
 
         <dt>

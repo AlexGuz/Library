@@ -1,19 +1,23 @@
-﻿using Library.Models;
-using System.Data.Entity;
+﻿using LibraryDB;
 using System.Linq;
 using System.Net;
 using System.Web.Mvc;
+using LibraryDB.Models;
 
 namespace Library.Controllers
 {
     public class AutorsController : Controller
     {
-        private LibraryContext _db = new LibraryContext();
+        private LibraryRepository<Autor> _autorRepo;
+
+        public AutorsController()
+        {
+            _autorRepo = new LibraryRepository<Autor>(new LibraryDBContext());
+        }
 
         public ActionResult List()
-        {
-            var autors = _db.Autors;
-            
+        {            
+            var autors = _autorRepo.Get();
             return View(autors);
         }
 
@@ -24,7 +28,7 @@ namespace Library.Controllers
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
 
-            var autor = _db.Autors.Include(a => a.Books).FirstOrDefault(a => a.Id == id);
+            var autor = _autorRepo.GetWithInclude(a => a.Units).FirstOrDefault(a => a.Id == id);
 
             if (autor == null)
             {
@@ -45,8 +49,7 @@ namespace Library.Controllers
         {
             if (ModelState.IsValid)
             {
-                _db.Autors.Add(autor);
-                _db.SaveChanges();
+                _autorRepo.Add(autor);
                 return RedirectToAction("List");
             }
             return View(autor);
@@ -59,7 +62,7 @@ namespace Library.Controllers
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            var autor = _db.Autors.Find(id);
+            var autor = _autorRepo.FindById(id);
             if (autor == null)
             {
                 return HttpNotFound();
@@ -72,8 +75,7 @@ namespace Library.Controllers
         {
             if (ModelState.IsValid)
             {
-                _db.Entry(autor).State = EntityState.Modified;
-                _db.SaveChanges();
+                _autorRepo.Edit(autor);
                 return RedirectToAction("List");
             }
             return View(autor);
@@ -85,7 +87,7 @@ namespace Library.Controllers
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            var autor = _db.Autors.Include(a => a.Books).FirstOrDefault(a => a.Id == id);
+            var autor = _autorRepo.GetWithInclude(a => a.Units).FirstOrDefault(a => a.Id == id);
 
             if (autor == null)
             {
@@ -97,13 +99,27 @@ namespace Library.Controllers
         [HttpPost, ActionName("Delete")]
         public ActionResult DeleteConfirmed(int id)
         {
-            var autor = _db.Autors.Find(id);
+            var autor = _autorRepo.FindById(id);
             if (autor != null)
             {
-                _db.Autors.Remove(autor);
-                _db.SaveChanges();
+                _autorRepo.Delete(autor);
             }
             return RedirectToAction("List");
+        }
+
+        public ActionResult SaveToFile(string fileType, string path)
+        {
+            string fileName = $"{nameof(Autor)}s.";
+            string filePath = string.Empty;
+
+            if (Request.PhysicalApplicationPath != null)
+            {
+                filePath = Server.HtmlEncode(Request.PhysicalApplicationPath);
+                string connectionString = filePath + fileName + fileType;
+                _autorRepo.Get().ToList().ToXMLFile(connectionString);
+            }
+
+            return RedirectToAction("SaveToFile", "Home", new { name = fileName, path = filePath });
         }
     }
 }

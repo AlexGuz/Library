@@ -1,0 +1,55 @@
+﻿@model LibraryDB.Models.Magazine
+
+@{
+    ViewBag.Title = "Details";
+}
+
+<h2>Details</h2>
+
+<div>
+    <h4>Magazine</h4>
+    <hr />
+    <dl class="dl-horizontal">
+        <dt>
+            @Html.DisplayNameFor(model => model.Unit.Title)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Unit.Title)
+        <dt>
+            @Html.DisplayNameFor(model => model.ReleaseDate)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.ReleaseDate)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.IssueNumber)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.IssueNumber)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.Unit.Autor)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Unit.Autor.AutorName)
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.Style)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Style)
+        </dd>
+
+    </dl>
+</div>
+<p>
+    @Html.ActionLink("Edit", "Edit", new { id = Model.Id }) |
+    @Html.ActionLink("Back to List", "List")
+</p>

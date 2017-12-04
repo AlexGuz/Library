@@ -1,4 +1,4 @@
-﻿@using Library.Models
+﻿@using LibraryDB.Models
 @model Autor
 
 @{
@@ -30,12 +30,12 @@
 
         <dt>
 
-            @Html.DisplayNameFor(model => model.Books)
+            @Html.DisplayNameFor(model => model.Units)
         </dt>
 
         <dd>
             <ul>
-                @foreach (Book b in Model.Books)
+                @foreach (LibraryStorageUnit b in Model.Units)
                 {
                     <li>@b.Title </li>
                 }

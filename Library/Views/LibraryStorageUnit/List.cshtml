@@ -1,0 +1,51 @@
+﻿@model IEnumerable<LibraryDB.Models.LibraryStorageUnit>
+
+@{
+    ViewBag.Title = "List";
+}
+
+<h2>List</h2>
+
+<form method="get">
+    <div class="form-inline">
+        <label class="control-label">Unit Type: </label>
+        @Html.DropDownList("unitType", ViewBag.UnitType as SelectList,
+            htmlAttributes: new { @class = "form-control" })
+        <input type="submit" value="Filter" class="btn btn-default" />
+    </div>
+</form>
+
+<table class="table">
+    <tr>
+        <th>
+            @Html.DisplayNameFor(model => model.Title)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.UnitName)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Autor)
+        </th>
+        <th></th>
+    </tr>
+
+    @foreach (var item in Model)
+    {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.Title)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.UnitName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Autor.AutorName)
+            </td>
+        </tr>
+    }
+
+</table>
+<div>
+    @Html.ActionLink("Save as xml", "SaveToFile", new { fileType = "xml" })
+    @Html.ActionLink("Save as txt", "SaveToFile", new { fileType = "txt" })
+</div>

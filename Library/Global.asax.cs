@@ -5,7 +5,6 @@ using System.Linq;
 using System.Web;
 using System.Web.Mvc;
 using System.Web.Routing;
-using Library.Models;
 
 namespace Library
 {
@@ -15,7 +14,7 @@ namespace Library
         {
             AreaRegistration.RegisterAllAreas();
             RouteConfig.RegisterRoutes(RouteTable.Routes);
-            Database.SetInitializer(new LibraryContextInitializer());
+            Database.SetInitializer(new LibraryDB.LibraryDBContextInitializer());
         }
     }
 }
