@@ -1,0 +1,148 @@
+﻿@{
+    ViewBag.Title = "List";
+}
+
+<h2>List</h2>
+
+
+<div id="example">
+    <div id="grid"></div>
+
+    <script type="text/x-kendo-template" id="template">
+        <div class="tabstrip">
+            <ul>
+                <li class="k-state-active">
+                    Library Storage Unit
+                </li>
+            </ul>
+            <div>
+                <div class="units"></div>
+            </div>
+        </div>
+
+    </script>
+
+    <script>
+        $(document).ready(function () {
+            var element = $("#grid").kendoGrid({
+                dataSource: {
+                    type: "json",
+                    transport: {
+                        read: "@Url.Action("GetData", new {id= "#grid" })"
+                    },
+                    model: {
+                        id: "Id",
+                        fields: {
+                            Id: { editable: false, nullable: true },
+                            Name: { type: "string" },
+                            Surname: { type: "string" }
+                        }
+                    },
+                    pageSize: 20,
+                    serverPaging: true,
+                    serverSorting: true
+                },
+                height: 550,
+                //groupable: true,
+                sortable: true,
+                pageable: false,
+                detailTemplate: kendo.template($("#template").html()),
+                detailInit: detailInit,
+                dataBound: function () {
+                    this.expandRow(this.tbody.find("tr.k-master-row").first());
+                },
+                filterable: {
+                    extra: false,
+                    operators: {
+                        string: {
+                            startswith: "Starts with",
+                            eq: "Is equal to",
+                            neq: "Is not equal to"
+                        }
+                    }
+                },
+                //pageable: {
+                //    refresh: true,
+                //    pageSizes: true,
+                //    buttonCount: 5
+                //},
+                columns: [
+                    {
+                        field: "Id",
+                        title: "Id"
+                    },
+                    {
+                        field: "Name",
+                        title: "Autor Name/Publisher",
+                        width: 240
+                    }, {
+                        field: "Surname",
+                        title: "Surname"
+                    }
+                ]
+            });
+        });
+
+        function detailInit(e) {
+            var detailRow = e.detailRow;
+            debugger
+            detailRow.find(".tabstrip").kendoTabStrip({
+                animation: {
+                    open: { effects: "fadeIn" }
+                }
+            });
+
+            detailRow.find(".units").kendoGrid({
+                dataSource: {
+                    type: "json",
+                    transport: {
+                        read: "@Url.Action("GetDetails" )"
+                    },
+                    serverPaging: true,
+                    serverSorting: true,
+                    serverFiltering: true,
+                    pageSize: 7,
+                    filter: { field: "Id", operator: "eq", value: e.data.Id }
+                },
+                scrollable: false,
+                sortable: true,
+                pageable: true,
+                columns: [
+                    { field: "Title", title: "Edition title ", width: "300px" }
+                ]
+            });
+        }
+    </script>
+
+    <style>
+        .k-detail-cell .k-tabstrip .k-content {
+            padding: 0.2em;
+        }
+
+        .employee-details ul {
+            list-style: none;
+            font-style: italic;
+            margin: 15px;
+            padding: 0;
+        }
+
+            .employee-details ul li {
+                margin: 0;
+                line-height: 1.7em;
+            }
+
+        .employee-details label {
+            display: inline-block;
+            width: 90px;
+            padding-right: 10px;
+            text-align: right;
+            font-style: normal;
+            font-weight: bold;
+        }
+    </style>
+
+</div>
+<div>
+    @Html.ActionLink("Save as xml", "SaveToFile", new { fileType = "xml" })
+    @Html.ActionLink("Save as txt", "SaveToFile", new { fileType = "txt" })
+</div>
