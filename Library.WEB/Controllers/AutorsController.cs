@@ -21,8 +21,8 @@ namespace Library.WEB.Controllers
         }
 
         public ActionResult List()
-        {   
-            
+        {
+
             return View();
         }
 
@@ -33,7 +33,9 @@ namespace Library.WEB.Controllers
                     a =>
                         new
                         {
-                            a.Id, a.Name, a.Surname
+                            a.Id,
+                            a.Name,
+                            a.Surname
                         }).ToList();
 
             return Json(autorsView, JsonRequestBehavior.AllowGet);
@@ -41,14 +43,14 @@ namespace Library.WEB.Controllers
 
         public JsonResult GetDetails()
         {
-            var unitDtos = _unitDtoRepo.Get();//.Where(u=>u.Id==id);
+            var unitDtos = _unitDtoRepo.Get();//.Where(u => u.Id == id);
             var unitview = unitDtos.Select(
                     u =>
                         new
                         {
                             u.Id,
                             u.Title,
-                            u.AutorId
+                            AutorId = u.AutorId
                         }).ToList();
 
             return Json(unitview, JsonRequestBehavior.AllowGet);
@@ -56,7 +58,7 @@ namespace Library.WEB.Controllers
 
         public ActionResult Details(int? id)
         {
-            
+
             if (id == null)
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
@@ -75,7 +77,7 @@ namespace Library.WEB.Controllers
 
         [HttpGet]
         public ActionResult Add()
-        {            
+        {
             return View();
         }
 
@@ -100,7 +102,8 @@ namespace Library.WEB.Controllers
             var autorDto = _autorDtoRepo.FindById(id);
             if (autorDto == null)
             {
-                return HttpNotFound();}
+                return HttpNotFound();
+            }
             return View(Mapper.Map<AutorDTO, AutorViewModel>(autorDto));
         }
 

@@ -28,7 +28,7 @@
                 dataSource: {
                     type: "json",
                     transport: {
-                        read: "@Url.Action("GetData", new {id= "#grid" })"
+                        read: "@Url.Action("GetData")"
                     },
                     model: {
                         id: "Id",
@@ -85,24 +85,25 @@
 
         function detailInit(e) {
             var detailRow = e.detailRow;
+            autorId = e.data.Id;
             debugger
             detailRow.find(".tabstrip").kendoTabStrip({
                 animation: {
                     open: { effects: "fadeIn" }
                 }
             });
-
+            autorId = e.data.Id;
             detailRow.find(".units").kendoGrid({
                 dataSource: {
                     type: "json",
                     transport: {
-                        read: "@Url.Action("GetDetails" )"
+                        read: "@Url.Action("GetDetails")"
                     },
                     serverPaging: true,
                     serverSorting: true,
                     serverFiltering: true,
                     pageSize: 7,
-                    filter: { field: "Id", operator: "eq", value: e.data.Id }
+                    filter: { field: "AutorId", operator: "eq", value: e.data.Id }
                 },
                 scrollable: false,
                 sortable: true,
