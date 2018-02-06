@@ -41,9 +41,24 @@ namespace Library.WEB.Controllers
             return Json(autorsView, JsonRequestBehavior.AllowGet);
         }
 
-        public JsonResult GetDetails()
+        //public JsonResult GetDetails()
+        //{
+        //    var unitDtos = _unitDtoRepo.Get();//.Where(u => u.Id == id);
+        //    var unitview = unitDtos.Select(
+        //            u =>
+        //                new
+        //                {
+        //                    u.Id,
+        //                    u.Title,
+        //                    AutorId = u.AutorId
+        //                }).ToList();
+
+        //    return Json(unitview, JsonRequestBehavior.AllowGet);
+        //}
+
+        public JsonResult GetDetails(int id)
         {
-            var unitDtos = _unitDtoRepo.Get();//.Where(u => u.Id == id);
+            var unitDtos = _unitDtoRepo.Get().Where(u => u.AutorId == id);
             var unitview = unitDtos.Select(
                     u =>
                         new

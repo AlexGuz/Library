@@ -24,28 +24,51 @@
 
     <script>
         $(document).ready(function () {
-            var element = $("#grid").kendoGrid({
-                dataSource: {
-                    type: "json",
-                    transport: {
-                        read: "@Url.Action("GetData")"
-                    },
-                    model: {
-                        id: "Id",
-                        fields: {
-                            Id: { editable: false, nullable: true },
-                            Name: { type: "string" },
-                            Surname: { type: "string" }
-                        }
-                    },
-                    pageSize: 20,
-                    serverPaging: true,
-                    serverSorting: true
-                },
+            dataSource = new kendo.data.DataSource({
+                            transport: {
+                                read: {
+                                    url: "@Url.Action("GetData")",
+                                    dataType: "json"
+                                },
+                                update: {
+                                    url: "@Url.Action("Update")",
+                                    dataType: "json"
+                                },
+                                destroy: {
+                                    url: "@Url.Action("Delete")",
+                                    dataType: "json"
+                                },
+                                create: {
+                                    url: "@Url.Action("Create")",
+                                    dataType: "json"
+                                },
+                                parameterMap: function (options, operation) {
+                                    if (operation !== "read" && options.models) {
+                                        return { models: kendo.stringify(options.models) };
+                                    }
+                                }
+                            },
+                            batch: true,
+                            pageSize: 20,
+                            schema: {
+                                model: {
+                                    id: "Id",
+                                    fields: {
+                                        Id: { editable: false, nullable: true },
+                                        Name: { type: "string" },
+                                        Surname: { type: "string" }
+                                    }
+                                }
+                            }
+            });
+
+            $("#grid").kendoGrid({
+                dataSource: dataSource,
                 height: 550,
                 //groupable: true,
                 sortable: true,
                 pageable: false,
+                toolbar: ["create"],
                 detailTemplate: kendo.template($("#template").html()),
                 detailInit: detailInit,
                 dataBound: function () {
@@ -61,49 +84,44 @@
                         }
                     }
                 },
-                //pageable: {
-                //    refresh: true,
-                //    pageSizes: true,
-                //    buttonCount: 5
-                //},
                 columns: [
                     {
                         field: "Id",
-                        title: "Id"
+                        title: "Registration number"
                     },
                     {
                         field: "Name",
-                        title: "Autor Name/Publisher",
-                        width: 240
+                        title: "Autor Name/Publisher"
                     }, {
                         field: "Surname",
                         title: "Surname"
-                    }
-                ]
+                    },
+                    { command: ["edit", "destroy"], title: "&nbsp;", width: "250px" }
+                ],
+                editable:"popup"
             });
         });
 
         function detailInit(e) {
             var detailRow = e.detailRow;
-            autorId = e.data.Id;
-            debugger
+
             detailRow.find(".tabstrip").kendoTabStrip({
                 animation: {
                     open: { effects: "fadeIn" }
                 }
             });
-            autorId = e.data.Id;
+
             detailRow.find(".units").kendoGrid({
                 dataSource: {
                     type: "json",
                     transport: {
-                        read: "@Url.Action("GetDetails")"
+                        read: "GetDetails/" + e.data.Id
                     },
                     serverPaging: true,
                     serverSorting: true,
                     serverFiltering: true,
-                    pageSize: 7,
-                    filter: { field: "AutorId", operator: "eq", value: e.data.Id }
+                    pageSize: 7
+
                 },
                 scrollable: false,
                 sortable: true,
