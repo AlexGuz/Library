@@ -8,7 +8,6 @@ namespace Library.DAL.Models
     {
         [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
-        [Required(ErrorMessage = "What is the name of your author?")]
         public string Name { get; set; }
         public string Surname { get; set; }
         public List<LibraryStorageUnit> Units { get; set; }

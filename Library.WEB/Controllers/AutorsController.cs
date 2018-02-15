@@ -2,6 +2,8 @@
 using System.Net;
 using System.Web.Mvc;
 using AutoMapper;
+using Kendo.Mvc.Extensions;
+using Kendo.Mvc.UI;
 using Library.BLL.DTO;
 using Library.BLL.Services;
 using Library.WEB.Models;
@@ -31,64 +33,44 @@ namespace Library.WEB.Controllers
             var autorDtos = _autorDtoRepo.Get();
             var autorsView = autorDtos.Select(
                     a =>
-                        new
+                        new AutorViewModel
                         {
-                            a.Id,
-                            a.Name,
-                            a.Surname
+                            Id = a.Id,
+                            Name = a.Name,
+                            Surname = a.Surname,
+                            FoundingDate = a.FoundingDate != 0 ? (int?)a.FoundingDate: null
                         }).ToList();
-
+           
             return Json(autorsView, JsonRequestBehavior.AllowGet);
         }
 
-        //public JsonResult GetDetails()
-        //{
-        //    var unitDtos = _unitDtoRepo.Get();//.Where(u => u.Id == id);
-        //    var unitview = unitDtos.Select(
-        //            u =>
-        //                new
-        //                {
-        //                    u.Id,
-        //                    u.Title,
-        //                    AutorId = u.AutorId
-        //                }).ToList();
-
-        //    return Json(unitview, JsonRequestBehavior.AllowGet);
-        //}
-
-        public JsonResult GetDetails(int id)
+        public ActionResult GetDetails(int id)
         {
             var unitDtos = _unitDtoRepo.Get().Where(u => u.AutorId == id);
             var unitview = unitDtos.Select(
                     u =>
-                        new
+                        new LibraryStorageUnitViewModel
                         {
-                            u.Id,
-                            u.Title,
+                            Id = u.Id,
+                            Title = u.Title,
                             AutorId = u.AutorId
                         }).ToList();
 
             return Json(unitview, JsonRequestBehavior.AllowGet);
         }
 
-        public ActionResult Details(int? id)
+
+        public ActionResult Edit( AutorViewModel autor)
         {
-
-            if (id == null)
+            if (autor != null && ModelState.IsValid)
             {
-                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+                //_autorDtoRepo.Edit(Mapper.Map<AutorViewModel, AutorDTO>(autor));
             }
-
-            var autorDto = _autorDtoRepo.GetWithInclude(id);
-            var autorView = Mapper.Map<AutorDTO, AutorViewModel>(autorDto);
-
-            if (autorView == null)
-            {
-                return HttpNotFound();
-            }
-
-            return View(autorView);
+            return RedirectToAction("List");
+           // return Json(new[] {autor}.ToDataSourceResult(request,ModelState));
         }
+
+        
 
         [HttpGet]
         public ActionResult Add()
@@ -107,31 +89,31 @@ namespace Library.WEB.Controllers
             return View(autorView);
         }
 
-        [HttpGet]
-        public ActionResult Edit(int? id)
-        {
-            if (id == null)
-            {
-                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
-            }
-            var autorDto = _autorDtoRepo.FindById(id);
-            if (autorDto == null)
-            {
-                return HttpNotFound();
-            }
-            return View(Mapper.Map<AutorDTO, AutorViewModel>(autorDto));
-        }
+        //[HttpGet]
+        //public ActionResult Edit(int? id)
+        //{
+        //    if (id == null)
+        //    {
+        //        return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+        //    }
+        //    var autorDto = _autorDtoRepo.FindById(id);
+        //    if (autorDto == null)
+        //    {
+        //        return HttpNotFound();
+        //    }
+        //    return View(Mapper.Map<AutorDTO, AutorViewModel>(autorDto));
+        //}
 
-        [HttpPost]
-        public ActionResult Edit(AutorViewModel autorView)
-        {
-            if (ModelState.IsValid)
-            {
-                _autorDtoRepo.Edit(Mapper.Map<AutorViewModel, AutorDTO>(autorView));
-                return RedirectToAction("List");
-            }
-            return View(autorView);
-        }
+        //[HttpPost]
+        //public ActionResult Edit(AutorViewModel autorView, int kjh)
+        //{
+        //    if (ModelState.IsValid)
+        //    {
+        //        _autorDtoRepo.Edit(Mapper.Map<AutorViewModel, AutorDTO>(autorView));
+        //        return RedirectToAction("List");
+        //    }
+        //    return View(autorView);
+        //}
 
         public ActionResult Delete(int? id)
         {
