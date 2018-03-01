@@ -1,0 +1,66 @@
+﻿
+@{
+    ViewBag.Title = "List";
+}
+
+<h2>List</h2>
+
+<div id="example">
+    <div id="grid"></div>
+    <script>
+        $(document).ready(function () {
+            $("#grid").kendoGrid({
+                dataSource: {
+                    type: "json",
+                    transport: {
+                        read: "@Url.Action("GetData")"
+                    },
+                    model: {
+                        fields: {
+                            Title: { type: "string" },
+                            UnitName: { type: "string" },
+                            Autor: { type: "string" }
+                        }
+                    },
+                    pageSize: 20
+                },
+                height: 550,
+                groupable: true,
+                sortable: true,
+                filterable: {
+                    extra: false,
+                    operators: {
+                        string: {
+                            startswith: "Starts with",
+                            eq: "Is equal to",
+                            neq: "Is not equal to"
+                        }
+                    }
+                },
+                pageable: {
+                    refresh: true,
+                    pageSizes: true,
+                    buttonCount: 5
+                },
+                columns: [
+                    {
+                        field: "Title",
+                        title: "Title",
+                        width: 240
+                    }, {
+                        field: "UnitName",
+                        title: "Library Unit Name"
+                    }, {
+                        field: "AutorName",
+                        title: "Autor Name/Publisher"
+                    }
+                ]
+            });
+        });
+    </script>
+</div>
+
+<div>
+    @Html.ActionLink("Save as xml", "SaveToFile", new { fileType = "xml" })
+    @Html.ActionLink("Save as txt", "SaveToFile", new { fileType = "txt" })
+</div>
