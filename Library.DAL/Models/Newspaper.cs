@@ -6,13 +6,11 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace Library.DAL.Models
 {
     [Serializable]
-    public class Newspaper 
+    public class Newspaper
     {
         [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
-        [Required(ErrorMessage = "When it's your periodical printed?")]
         public int ReleaseDate { get; set; }
-        [Required(ErrorMessage = "What is the Issue Number of your newspaper?")]
         public int IssueNumber { get; set; }
         public NewspaperType Type { get; set; }
         public int UnitId { get; set; }
@@ -20,7 +18,7 @@ namespace Library.DAL.Models
 
         public Newspaper()
         {
-            
+
         }
     }
 }

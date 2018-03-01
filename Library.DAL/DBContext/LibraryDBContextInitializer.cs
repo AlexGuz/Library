@@ -24,7 +24,7 @@ namespace Library.DAL
             var autor13 = new Autor { Name = "Guardian Media Group", FoundingDate = 1907 };
             var autor14 = new Autor { Name = "Washington Post Company", FoundingDate = 1877 };
             var autor15 = new Autor { Name = "News Corp", FoundingDate = 2013 };
-            
+
             db.Autors.AddRange(new List<Autor>() { autor1, autor2, autor3, autor4, autor5, autor6, autor7,
                 autor8, autor9, autor10, autor11, autor12, autor13, autor14, autor15});
 
@@ -151,9 +151,9 @@ namespace Library.DAL
                 ReleaseDate = 2017,
                 Type = NewspaperType.Daily
             };
-            
+
             db.Newspapers.AddRange(new List<Newspaper>() { newspaper1, newspaper2, newspaper3, newspaper4 });
-            
+
             db.SaveChanges();
         }
     }

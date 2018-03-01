@@ -27,7 +27,8 @@ namespace Library.BLL.Services
 
         public void Delete(MagazineDTO magazineDto)
         {
-            _magazineRepository.Delete(Mapper.Map<MagazineDTO, Magazine>(magazineDto));
+            var delMagazine = _magazineRepository.Get().FirstOrDefault(n => n.Id == magazineDto.Id);
+            _magazineRepository.Delete(delMagazine);
             _magazineRepository.SaveChanges();
         }
 

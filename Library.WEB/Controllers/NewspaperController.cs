@@ -1,9 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
 using System.Linq;
 using System.Net;
 using System.Web.Mvc;
 using AutoMapper;
 using Library.BLL.DTO;
+using Library.BLL.EnumsDTO;
 using Library.BLL.Services;
 using Library.WEB.Models;
 
@@ -24,111 +25,122 @@ namespace Library.WEB.Controllers
 
         public ActionResult List()
         {
-            var newspaperDto = _newspaperDtoRepo.Get();
-
-            return View(Mapper.Map<IEnumerable<NewspaperDTO>, List<NewspaperViewModel>>(newspaperDto));
-        }
-
-        public ActionResult Details(int? id)
-        {
-            if (id == null)
-            {
-                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
-            }
-
-            var newspaperDto = _newspaperDtoRepo.GetWithInclude(id);
-
-            if (newspaperDto == null)
-            {
-                return HttpNotFound();
-            }
-            var newspaperView = Mapper.Map<NewspaperDTO, NewspaperViewModel>(newspaperDto);
-            return View(newspaperView);
-        }
-
-        [HttpGet]
-        public ActionResult Add()
-        {
-            var autorsDto = _autorDtoRepo.Get();
-            var autorsView = new SelectList(Mapper.Map<IEnumerable<AutorDTO>, List<AutorViewModel>>(autorsDto), "Id", "AutorName");
-            var unitsDto = _unitDtoRepo.Get().Where(u => u.UnitName == null);
-            var unitsView = new SelectList(Mapper.Map<IEnumerable<LibraryStorageUnitDTO>, List<LibraryStorageUnitViewModel>>(unitsDto), "Id", "Title");
-
-            ViewBag.Autors = autorsView;
-            ViewBag.Units = unitsView;
             return View();
         }
 
-        [HttpPost]
-        public ActionResult Add([Bind(Include = "Id,ReleaseDate")]NewspaperViewModel newspaperView)
+        public JsonResult GetData(int? id)
         {
-            if (ModelState.IsValid)
+            var newspaperDtos = _newspaperDtoRepo.Get();
+            if (id != null)
             {
-                _newspaperDtoRepo.Create(Mapper.Map<NewspaperViewModel, NewspaperDTO>(newspaperView));
-                return RedirectToAction("List");
+                newspaperDtos = _newspaperDtoRepo.Get().Where(n => n.Id == id);
             }
-            return View(newspaperView);
+
+            var newspaperView = newspaperDtos.Select(
+                    n =>
+                        new NewspaperViewModel
+                        {
+                            Id = n.Id,
+                            Title = n.Unit.Title,
+                            Autor = Mapper.Map<AutorDTO, AutorViewModel>(n.Unit.Autor),
+                            Type = n.Type.ToString(),
+                            ReleaseDate = n.ReleaseDate,
+                            UnitId = n.Unit.Id,
+                            IssueNumber = n.IssueNumber
+                        }).ToList();
+
+            return Json(newspaperView, JsonRequestBehavior.AllowGet);
         }
 
-        [HttpGet]
-        public ActionResult Edit(int? id)
+        public JsonResult AutorsList()
         {
-            if (id == null)
+            var autorsNameList = _autorDtoRepo.Get().Select(a => new AutorViewModel
             {
-                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
-            }
-            var newspaperDto = _newspaperDtoRepo.FindById(id);
-            if (newspaperDto == null)
-            {
-                return HttpNotFound();
-            }
-            var autorsDto = _autorDtoRepo.Get();
-            var autorsView = new SelectList(Mapper.Map<IEnumerable<AutorDTO>, List<AutorViewModel>>(autorsDto), "Id", "AutorName");
-            var unitsDto = _unitDtoRepo.Get().Where(u => u.UnitName == null);
-            var unitsView = new SelectList(Mapper.Map<IEnumerable<LibraryStorageUnitDTO>, List<LibraryStorageUnitViewModel>>(unitsDto), "Id", "Title");
+                Id = a.Id,
+                Name = a.Name,
+                Surname = a.Surname
+            });
 
-            ViewBag.Autors = autorsView;
-            ViewBag.Units = unitsView;
+            return Json(autorsNameList, JsonRequestBehavior.AllowGet);
+        }
 
-            return View(Mapper.Map<NewspaperDTO, NewspaperViewModel>(newspaperDto));
+        public JsonResult GenreList()
+        {
+            var genreList = Enum.GetNames(typeof(NewspaperTypeDTO));
+            return Json(genreList, JsonRequestBehavior.AllowGet);
         }
 
         [HttpPost]
         public ActionResult Edit(NewspaperViewModel newspaperView)
         {
-            if (ModelState.IsValid)
-            {
-                _newspaperDtoRepo.Edit(Mapper.Map<NewspaperViewModel, NewspaperDTO>(newspaperView));
-                return RedirectToAction("List");
-            }
-            return View(newspaperView);
-        }
-
-        public ActionResult Delete(int? id)
-        {
-            if (id == null)
+            if (newspaperView == null || !ModelState.IsValid)
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            var newspaperDto = _newspaperDtoRepo.GetWithInclude(id);
 
-            if (newspaperDto == null)
+            var unitForEdit = _unitDtoRepo.Get().FirstOrDefault(u => u.Id == newspaperView.UnitId);
+
+            if (unitForEdit != null)
             {
-                return HttpNotFound();
+                unitForEdit.Title = newspaperView.Title;
+                unitForEdit.AutorId = newspaperView.Autor.Id;
+                unitForEdit.Autor = _autorDtoRepo.Get().FirstOrDefault(a => a.Id == newspaperView.Autor.Id);
+                _unitDtoRepo.Edit(unitForEdit);
             }
 
-            return View(Mapper.Map<NewspaperDTO, NewspaperViewModel>(newspaperDto));
+            var newspaperForEdit = _newspaperDtoRepo.Get().FirstOrDefault(u => u.Id == newspaperView.Id);
+
+            if (newspaperForEdit != null)
+            {
+                newspaperForEdit.Unit = unitForEdit;
+                newspaperForEdit.Type = (NewspaperTypeDTO)Enum.Parse(typeof(NewspaperTypeDTO), newspaperView.Type);
+                newspaperForEdit.ReleaseDate = newspaperView.ReleaseDate;
+                newspaperForEdit.IssueNumber = newspaperView.IssueNumber;
+
+                _newspaperDtoRepo.Edit(newspaperForEdit);
+            }
+            return Json(newspaperView);
         }
 
-        [HttpPost, ActionName("Delete")]
-        public ActionResult DeleteConfirmed(int id)
+        [HttpPut]
+        public ActionResult Add(NewspaperViewModel newspaperView)
         {
-            var newspaperDto = _newspaperDtoRepo.FindById(id);
-            if (newspaperDto != null)
+            if (newspaperView == null || !ModelState.IsValid)
             {
-                _newspaperDtoRepo.Delete(newspaperDto);
+                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            return RedirectToAction("List");
+
+            var unitForAdd = new LibraryStorageUnitDTO
+            {
+                AutorId = newspaperView.Autor.Id,
+                Title = newspaperView.Title
+            };
+
+            var newspaperForAdd = new NewspaperDTO
+            {
+                Type = (NewspaperTypeDTO)Enum.Parse(typeof(NewspaperTypeDTO), newspaperView.Type),
+                ReleaseDate = newspaperView.ReleaseDate,
+                IssueNumber = newspaperView.IssueNumber,
+                Unit = unitForAdd,
+                UnitId = unitForAdd.Id
+            };
+
+            _newspaperDtoRepo.Create(newspaperForAdd);
+            return Json(newspaperView);
+        }
+
+        public ActionResult Delete(NewspaperViewModel newspaperView)
+        {
+            var newspaperDto = _newspaperDtoRepo.Get().FirstOrDefault(n => n.Id == newspaperView.Id);
+            var unitDto = _unitDtoRepo.Get().FirstOrDefault(u => u.Id == newspaperView.UnitId);
+
+            if (newspaperDto == null || unitDto == null)
+            {
+                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+            }
+            _newspaperDtoRepo.Delete(newspaperDto);
+            _unitDtoRepo.Delete(unitDto);
+            return Json(newspaperView);
         }
 
         public ActionResult SaveToFile(string fileType, string path)

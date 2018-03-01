@@ -457,10 +457,6 @@
     <Compile Include="Controllers\LibraryStorageUnitController.cs" />
     <Compile Include="Controllers\MagazineController.cs" />
     <Compile Include="Controllers\NewspaperController.cs" />
-    <Compile Include="EnumsViewModel\BookGenreViewModel.cs" />
-    <Compile Include="EnumsViewModel\BrochureTypeViewModel.cs" />
-    <Compile Include="EnumsViewModel\NewspaperTypeViewModel.cs" />
-    <Compile Include="EnumsViewModel\StylesOfPublicationsViewModel.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
@@ -481,33 +477,11 @@
     <Content Include="Views\Shared\_Layout.cshtml" />
     <Content Include="Scripts\jquery-1.10.2.min.map" />
     <Content Include="Views\Autors\List.cshtml" />
-    <Content Include="Views\Autors\Details.cshtml" />
-    <Content Include="Views\Autors\Add.cshtml" />
-    <Content Include="Views\Autors\Edit.cshtml" />
-    <Content Include="Views\Autors\Delete.cshtml" />
     <Content Include="Views\LibraryStorageUnit\List.cshtml" />
-    <Content Include="Views\LibraryStorageUnit\Add.cshtml" />
-    <Content Include="Views\LibraryStorageUnit\Edit.cshtml" />
-    <Content Include="Views\Books\Add.cshtml" />
-    <Content Include="Views\Books\Delete.cshtml" />
-    <Content Include="Views\Books\Details.cshtml" />
-    <Content Include="Views\Books\Edit.cshtml" />
     <Content Include="Views\Books\List.cshtml" />
     <Content Include="Views\Magazine\List.cshtml" />
-    <Content Include="Views\Magazine\Details.cshtml" />
-    <Content Include="Views\Magazine\Add.cshtml" />
-    <Content Include="Views\Magazine\Edit.cshtml" />
-    <Content Include="Views\Magazine\Delete.cshtml" />
     <Content Include="Views\Brochure\List.cshtml" />
-    <Content Include="Views\Brochure\Details.cshtml" />
-    <Content Include="Views\Brochure\Add.cshtml" />
-    <Content Include="Views\Brochure\Edit.cshtml" />
-    <Content Include="Views\Brochure\Delete.cshtml" />
     <Content Include="Views\Newspaper\List.cshtml" />
-    <Content Include="Views\Newspaper\Details.cshtml" />
-    <Content Include="Views\Newspaper\Add.cshtml" />
-    <Content Include="Views\Newspaper\Edit.cshtml" />
-    <Content Include="Views\Newspaper\Delete.cshtml" />
     <Content Include="Views\Home\SaveToFile.cshtml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>

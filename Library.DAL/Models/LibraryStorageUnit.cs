@@ -10,7 +10,6 @@ namespace Library.DAL.Models
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
-        [Required(ErrorMessage = "What is the name of your edition?")]
         public string Title { get; set; }
         public string UnitName { get; set; }
         public int AutorId { get; set; }

@@ -26,13 +26,13 @@ namespace Library.BLL.Services
 
         public void Delete(LibraryStorageUnitDTO libraryStorageUnitDto)
         {
-            _libraryStorageUnitRepository.Delete(Mapper.Map<LibraryStorageUnitDTO, LibraryStorageUnit>(libraryStorageUnitDto));
+            var delUnit = _libraryStorageUnitRepository.Get().FirstOrDefault(u => u.Id == libraryStorageUnitDto.Id);
+            _libraryStorageUnitRepository.Delete(delUnit);
             _libraryStorageUnitRepository.SaveChanges();
         }
 
         public void Edit(LibraryStorageUnitDTO libraryStorageUnitDto)
         {
-            libraryStorageUnitDto.UnitName = null;
             _libraryStorageUnitRepository.Edit(Mapper.Map<LibraryStorageUnitDTO, LibraryStorageUnit>(libraryStorageUnitDto));
             _libraryStorageUnitRepository.SaveChanges();
         }
@@ -50,7 +50,7 @@ namespace Library.BLL.Services
 
         public LibraryStorageUnitDTO GetWithInclude(int? id)
         {
-            var libraryStorageUnit = _libraryStorageUnitRepository.GetWithInclude(u => u.Autor).FirstOrDefault(b => b.Id == id); 
+            var libraryStorageUnit = _libraryStorageUnitRepository.GetWithInclude(u => u.Autor).FirstOrDefault(b => b.Id == id);
             return Mapper.Map<LibraryStorageUnit, LibraryStorageUnitDTO>(libraryStorageUnit);
         }
 

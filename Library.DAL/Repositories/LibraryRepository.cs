@@ -35,7 +35,7 @@ namespace Library.DAL.Repositories
 
         public void Delete(T item)
         {
-            _dbSet.Remove(item);
+            _context.Entry(item).State = EntityState.Deleted;
             _context.SaveChanges();
         }
 
@@ -47,12 +47,12 @@ namespace Library.DAL.Repositories
 
         public IEnumerable<T> Get()
         {
-            return _dbSet.ToList();
+            return _dbSet.AsNoTracking().ToList();
         }
 
         public IEnumerable<T> Get(Func<T, bool> predicate)
         {
-            return _dbSet.Where(predicate).ToList();
+            return _dbSet.AsNoTracking().Where(predicate).ToList();
         }
 
         public IEnumerable<T> GetWithInclude(params Expression<Func<T, object>>[] includeProperties)
@@ -68,7 +68,7 @@ namespace Library.DAL.Repositories
 
         private IQueryable<T> Include(params Expression<Func<T, object>>[] includeProperties)
         {
-            IQueryable<T> query = _dbSet;
+            IQueryable<T> query = _dbSet.AsNoTracking();
             return includeProperties.Aggregate(query, (current, includeProperty) => current.Include(includeProperty));
         }
         public void SaveChanges()

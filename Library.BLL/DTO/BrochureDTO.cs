@@ -2,7 +2,7 @@
 
 namespace Library.BLL.DTO
 {
-    public class BrochureDTO 
+    public class BrochureDTO
     {
         public int Id { get; set; }
         public int ReleaseDate { get; set; }

@@ -6,7 +6,7 @@ using System.Data.Entity;
 
 namespace Library.BLL.Infrastructure
 {
-    public class ServiceModule : NinjectModule 
+    public class ServiceModule : NinjectModule
     {
         private string connectionString;
         public ServiceModule(string connection)
@@ -15,7 +15,7 @@ namespace Library.BLL.Infrastructure
         }
         public override void Load()
         {
-            Bind(typeof (IGenericRepository<>)).To(typeof (LibraryRepository<>)).WithConstructorArgument(connectionString);
+            Bind(typeof(IGenericRepository<>)).To(typeof(LibraryRepository<>)).WithConstructorArgument(connectionString);
             Bind<DbContext>().To<LibraryDBContext>();
         }
     }

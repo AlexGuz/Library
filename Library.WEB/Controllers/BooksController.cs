@@ -1,9 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
 using System.Linq;
 using System.Net;
 using System.Web.Mvc;
 using AutoMapper;
 using Library.BLL.DTO;
+using Library.BLL.EnumsDTO;
 using Library.BLL.Services;
 using Library.WEB.Models;
 
@@ -21,116 +22,122 @@ namespace Library.WEB.Controllers
             _autorDtoRepo = autorDtoRepo;
             _unitDtoRepo = unitDtoRepo;
         }
-        
+
         public ActionResult List()
         {
-            var booksDto = _bookDtoRepo.Get();
-            
-            return View(Mapper.Map<IEnumerable<BookDTO>, List<BookViewModel>>(booksDto));
-        }
-
-        public ActionResult Details(int? id)
-        {
-            if (id == null)
-            {
-                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
-            }
-            
-            
-            var bookDto = _bookDtoRepo.GetWithInclude(id);
-            var bookView = Mapper.Map<BookDTO, BookViewModel>(bookDto);
-            if (bookView == null)
-            {
-                return HttpNotFound();
-            }
-
-            return View(bookView);
-        }
-
-        [HttpGet]
-        public ActionResult Add()
-        {
-            var autorsDto = _autorDtoRepo.Get();
-            var autorsView = new SelectList(Mapper.Map<IEnumerable<AutorDTO>, List<AutorViewModel>>(autorsDto),"Id", "AutorName");
-            var unitsDto = _unitDtoRepo.Get().Where(u => u.UnitName == null);
-            var unitsView = new SelectList(Mapper.Map<IEnumerable<LibraryStorageUnitDTO>, List<LibraryStorageUnitViewModel>>(unitsDto), "Id", "Title");
-
-            ViewBag.Autors = autorsView;
-            ViewBag.Units = unitsView;
             return View();
         }
 
-        [HttpPost]
-        public ActionResult Add([Bind(Include = "Id,ReleaseDate")]BookViewModel bookView)
+        public JsonResult GetData(int? id)
         {
-            if (ModelState.IsValid)
+            var booksDtos = _bookDtoRepo.Get();
+            if (id != null)
             {
-                _bookDtoRepo.Create(Mapper.Map<BookViewModel, BookDTO>(bookView));
-                return RedirectToAction("List");
+                booksDtos = _bookDtoRepo.Get().Where(b => b.Id == id);
             }
-            return View(bookView);
+
+            var booksView = booksDtos.Select(
+                    b =>
+                        new BookViewModel
+                        {
+                            Id = b.Id,
+                            Title = b.Unit.Title,
+                            Autor = Mapper.Map<AutorDTO, AutorViewModel>(b.Unit.Autor),
+                            Genre = b.Genre.ToString(),
+                            ReleaseDate = b.ReleaseDate,
+                            UnitId = b.Unit.Id,
+                        }).ToList();
+
+            return Json(booksView, JsonRequestBehavior.AllowGet);
         }
 
-        [HttpGet]
-        public ActionResult Edit(int? id)
+        public JsonResult AutorsList()
         {
-            if (id == null)
+            var autorsNameList = _autorDtoRepo.Get().Select(a => new AutorViewModel
             {
-                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
-            }
-            var bookDto = _bookDtoRepo.FindById(id);
-            if (bookDto == null)
-            {
-                return HttpNotFound();
-            }
-            
-            var autorsDto = _autorDtoRepo.Get();
-            var autorsView = new SelectList(Mapper.Map<IEnumerable<AutorDTO>, List<AutorViewModel>>(autorsDto), "Id", "AutorName");
-            var unitsDto = _unitDtoRepo.Get().Where(u => u.UnitName == null);
-            var unitsView = new SelectList(Mapper.Map<IEnumerable<LibraryStorageUnitDTO>, List<LibraryStorageUnitViewModel>>(unitsDto), "Id", "Title");
+                Id = a.Id,
+                Name = a.Name,
+                Surname = a.Surname
+            });
 
-            ViewBag.Autors = autorsView;
-            ViewBag.Units = unitsView;
+            return Json(autorsNameList, JsonRequestBehavior.AllowGet);
+        }
 
-            return View(Mapper.Map<BookDTO, BookViewModel>(bookDto));
+        public JsonResult GenreList()
+        {
+            var genreList = Enum.GetNames(typeof(BookGenreDTO));
+            return Json(genreList, JsonRequestBehavior.AllowGet);
         }
 
         [HttpPost]
         public ActionResult Edit(BookViewModel bookView)
         {
-            if (ModelState.IsValid)
-            {
-                _bookDtoRepo.Edit(Mapper.Map<BookViewModel, BookDTO>(bookView));
-                return RedirectToAction("List");
-            }
-            return View(bookView);
-        }
-
-        public ActionResult Delete(int? id)
-        {
-            if (id == null)
+            if (bookView == null || !ModelState.IsValid)
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            var bookDto = _bookDtoRepo.GetWithInclude(id);
 
-            if (bookDto == null)
+            var unitForEdit = _unitDtoRepo.Get().FirstOrDefault(u => u.Id == bookView.UnitId);
+
+            if (unitForEdit != null)
             {
-                return HttpNotFound();
+                unitForEdit.Title = bookView.Title;
+                unitForEdit.AutorId = bookView.Autor.Id;
+                unitForEdit.Autor = _autorDtoRepo.Get().FirstOrDefault(a => a.Id == bookView.Autor.Id);
+                _unitDtoRepo.Edit(unitForEdit);
             }
 
-            return View(Mapper.Map<BookDTO, BookViewModel>(bookDto));
+            var bookForEdit = _bookDtoRepo.Get().FirstOrDefault(u => u.Id == bookView.Id);
+
+            if (bookForEdit != null)
+            {
+                bookForEdit.Unit = unitForEdit;
+                bookForEdit.Genre = (BookGenreDTO)Enum.Parse(typeof(BookGenreDTO), bookView.Genre);
+                bookForEdit.ReleaseDate = bookView.ReleaseDate;
+
+                _bookDtoRepo.Edit(bookForEdit);
+            }
+            return Json(bookView);
         }
 
-        [HttpPost, ActionName("Delete")]
-        public ActionResult DeleteConfirmed(int id)
+        [HttpPut]
+        public ActionResult Add(BookViewModel bookView)
         {
-            var bookDto = _bookDtoRepo.FindById(id);
-            if (bookDto != null)
+            if (bookView == null || !ModelState.IsValid)
             {
-                _bookDtoRepo.Delete(bookDto);
+                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            return RedirectToAction("List");
+
+            var unitForAdd = new LibraryStorageUnitDTO
+            {
+                AutorId = bookView.Autor.Id,
+                Title = bookView.Title
+            };
+
+            var bookForAdd = new BookDTO
+            {
+                Genre = (BookGenreDTO)Enum.Parse(typeof(BookGenreDTO), bookView.Genre),
+                ReleaseDate = bookView.ReleaseDate,
+                Unit = unitForAdd,
+                UnitId = unitForAdd.Id
+            };
+
+            _bookDtoRepo.Create(bookForAdd);
+            return Json(bookView);
+        }
+
+        public ActionResult Delete(BookViewModel bookView)
+        {
+            var bookDto = _bookDtoRepo.Get().FirstOrDefault(b => b.Id == bookView.Id);
+            var unitDto = _unitDtoRepo.Get().FirstOrDefault(u => u.Id == bookView.UnitId);
+
+            if (bookDto == null || unitDto == null)
+            {
+                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+            }
+            _bookDtoRepo.Delete(bookDto);
+            _unitDtoRepo.Delete(unitDto);
+            return Json(bookView);
         }
 
         public ActionResult SaveToFile(string fileType, string path)

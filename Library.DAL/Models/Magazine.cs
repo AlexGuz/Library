@@ -10,9 +10,7 @@ namespace Library.DAL.Models
     {
         [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
-        [Required(ErrorMessage = "When it's your periodical printed?")]
         public int ReleaseDate { get; set; }
-        [Required(ErrorMessage = "What is the Issue Number of your magazine?")]
         public int IssueNumber { get; set; }
         public StylesOfPublications Style { get; set; }
         public int UnitId { get; set; }

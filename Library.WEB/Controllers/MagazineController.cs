@@ -1,9 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
 using System.Linq;
 using System.Net;
 using System.Web.Mvc;
 using AutoMapper;
 using Library.BLL.DTO;
+using Library.BLL.EnumsDTO;
 using Library.BLL.Services;
 using Library.WEB.Models;
 
@@ -24,111 +25,122 @@ namespace Library.WEB.Controllers
 
         public ActionResult List()
         {
-            var magazineDto = _magazineDtoRepo.Get();
-
-            return View(Mapper.Map<IEnumerable<MagazineDTO>, List<MagazineViewModel>>(magazineDto));
-        }
-
-        public ActionResult Details(int? id)
-        {
-            if (id == null)
-            {
-                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
-            }
-
-            var magazineDto = _magazineDtoRepo.GetWithInclude(id);
-            
-            if (magazineDto == null)
-            {
-                return HttpNotFound();
-            }
-            var magazineView = Mapper.Map<MagazineDTO, MagazineViewModel>(magazineDto);
-            return View(magazineView);
-        }
-
-        [HttpGet]
-        public ActionResult Add()
-        {
-            var autorsDto = _autorDtoRepo.Get();
-            var autorsView = new SelectList(Mapper.Map<IEnumerable<AutorDTO>, List<AutorViewModel>>(autorsDto), "Id", "AutorName");
-            var unitsDto = _unitDtoRepo.Get().Where(u => u.UnitName == null);
-            var unitsView = new SelectList(Mapper.Map<IEnumerable<LibraryStorageUnitDTO>, List<LibraryStorageUnitViewModel>>(unitsDto), "Id", "Title");
-
-            ViewBag.Autors = autorsView;
-            ViewBag.Units = unitsView;
             return View();
         }
 
-        [HttpPost]
-        public ActionResult Add([Bind(Include = "Id,ReleaseDate")]MagazineViewModel magazineView)
+        public JsonResult GetData(int? id)
         {
-            if (ModelState.IsValid)
+            var magazineDtos = _magazineDtoRepo.Get();
+            if (id != null)
             {
-                _magazineDtoRepo.Create(Mapper.Map<MagazineViewModel, MagazineDTO>(magazineView));
-                return RedirectToAction("List");
+                magazineDtos = _magazineDtoRepo.Get().Where(m => m.Id == id);
             }
-            return View(magazineView);
+
+            var magazineView = magazineDtos.Select(
+                    m =>
+                        new MagazineViewModel
+                        {
+                            Id = m.Id,
+                            Title = m.Unit.Title,
+                            Autor = Mapper.Map<AutorDTO, AutorViewModel>(m.Unit.Autor),
+                            Style = m.Style.ToString(),
+                            ReleaseDate = m.ReleaseDate,
+                            UnitId = m.Unit.Id,
+                            IssueNumber = m.IssueNumber
+                        }).ToList();
+
+            return Json(magazineView, JsonRequestBehavior.AllowGet);
         }
 
-        [HttpGet]
-        public ActionResult Edit(int? id)
+        public JsonResult AutorsList()
         {
-            if (id == null)
+            var autorsNameList = _autorDtoRepo.Get().Select(a => new AutorViewModel
             {
-                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
-            }
-            var magazineDto = _magazineDtoRepo.FindById(id);
-            if (magazineDto == null)
-            {
-                return HttpNotFound();
-            }
-            var autorsDto = _autorDtoRepo.Get();
-            var autorsView = new SelectList(Mapper.Map<IEnumerable<AutorDTO>, List<AutorViewModel>>(autorsDto), "Id", "AutorName");
-            var unitsDto = _unitDtoRepo.Get().Where(u => u.UnitName == null);
-            var unitsView = new SelectList(Mapper.Map<IEnumerable<LibraryStorageUnitDTO>, List<LibraryStorageUnitViewModel>>(unitsDto), "Id", "Title");
+                Id = a.Id,
+                Name = a.Name,
+                Surname = a.Surname
+            });
 
-            ViewBag.Autors = autorsView;
-            ViewBag.Units = unitsView;
+            return Json(autorsNameList, JsonRequestBehavior.AllowGet);
+        }
 
-            return View(Mapper.Map<MagazineDTO, MagazineViewModel>(magazineDto));
+        public JsonResult GenreList()
+        {
+            var genreList = Enum.GetNames(typeof(StylesOfPublicationsDTO));
+            return Json(genreList, JsonRequestBehavior.AllowGet);
         }
 
         [HttpPost]
         public ActionResult Edit(MagazineViewModel magazineView)
         {
-            if (ModelState.IsValid)
-            {
-                _magazineDtoRepo.Edit(Mapper.Map<MagazineViewModel, MagazineDTO>(magazineView));
-                return RedirectToAction("List");
-            }
-            return View(magazineView);
-        }
-
-        public ActionResult Delete(int? id)
-        {
-            if (id == null)
+            if (magazineView == null || !ModelState.IsValid)
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            var magazineDto = _magazineDtoRepo.GetWithInclude(id);
 
-            if (magazineDto == null)
+            var unitForEdit = _unitDtoRepo.Get().FirstOrDefault(u => u.Id == magazineView.UnitId);
+
+            if (unitForEdit != null)
             {
-                return HttpNotFound();
+                unitForEdit.Title = magazineView.Title;
+                unitForEdit.AutorId = magazineView.Autor.Id;
+                unitForEdit.Autor = _autorDtoRepo.Get().FirstOrDefault(a => a.Id == magazineView.Autor.Id);
+                _unitDtoRepo.Edit(unitForEdit);
             }
 
-            return View(Mapper.Map<MagazineDTO, MagazineViewModel>(magazineDto));
+            var magazineForEdit = _magazineDtoRepo.Get().FirstOrDefault(u => u.Id == magazineView.Id);
+
+            if (magazineForEdit != null)
+            {
+                magazineForEdit.Unit = unitForEdit;
+                magazineForEdit.Style = (StylesOfPublicationsDTO)Enum.Parse(typeof(StylesOfPublicationsDTO), magazineView.Style);
+                magazineForEdit.ReleaseDate = magazineView.ReleaseDate;
+                magazineForEdit.IssueNumber = magazineView.IssueNumber;
+
+                _magazineDtoRepo.Edit(magazineForEdit);
+            }
+            return Json(magazineView);
         }
 
-        [HttpPost, ActionName("Delete")]
-        public ActionResult DeleteConfirmed(int id)
+        [HttpPut]
+        public ActionResult Add(MagazineViewModel magazineView)
         {
-            var magazineDto = _magazineDtoRepo.FindById(id);
-            if (magazineDto != null)
+            if (magazineView == null || !ModelState.IsValid)
             {
-                _magazineDtoRepo.Delete(magazineDto);
+                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            return RedirectToAction("List");
+
+            var unitForAdd = new LibraryStorageUnitDTO
+            {
+                AutorId = magazineView.Autor.Id,
+                Title = magazineView.Title
+            };
+
+            var magazineForAdd = new MagazineDTO
+            {
+                Style = (StylesOfPublicationsDTO)Enum.Parse(typeof(StylesOfPublicationsDTO), magazineView.Style),
+                ReleaseDate = magazineView.ReleaseDate,
+                Unit = unitForAdd,
+                UnitId = unitForAdd.Id,
+                IssueNumber = magazineView.IssueNumber
+            };
+
+            _magazineDtoRepo.Create(magazineForAdd);
+            return Json(magazineView);
+        }
+
+        public ActionResult Delete(MagazineViewModel magazineView)
+        {
+            var magazineDto = _magazineDtoRepo.Get().FirstOrDefault(m => m.Id == magazineView.Id);
+            var unitDto = _unitDtoRepo.Get().FirstOrDefault(u => u.Id == magazineView.UnitId);
+
+            if (magazineDto == null || unitDto == null)
+            {
+                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+            }
+            _magazineDtoRepo.Delete(magazineDto);
+            _unitDtoRepo.Delete(unitDto);
+            return Json(magazineView);
         }
 
         public ActionResult SaveToFile(string fileType, string path)

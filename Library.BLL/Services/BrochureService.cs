@@ -27,7 +27,8 @@ namespace Library.BLL.Services
 
         public void Delete(BrochureDTO brochureDto)
         {
-            _brochureRepository.Delete(Mapper.Map<BrochureDTO, Brochure>(brochureDto));
+            var delBrochure = _brochureRepository.Get().FirstOrDefault(b => b.Id == brochureDto.Id);
+            _brochureRepository.Delete(delBrochure);
             _brochureRepository.SaveChanges();
         }
 

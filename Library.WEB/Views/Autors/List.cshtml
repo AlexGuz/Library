@@ -25,29 +25,30 @@
     <script>
         $(document).ready(function () {
 
-            dataSource = new kendo.data.DataSource({
+            var dataSource = new kendo.data.DataSource({
                 transport: {
                     read: {
                         url: "@Url.Action("GetData")",
                         dataType: "json"
                     },
                     update: {
-                        url: "Edit/",
+                        url: "@Url.Action("Edit")",
                         dataType: "json",
-                        type:"POST"
+                        type: "POST"
                     },
                     destroy: {
                         url: "@Url.Action("Delete")",
-                        dataType: "json"
+                        dataType: "json",
+                        type: "DELETE"
                     },
                     create: {
                         url: "@Url.Action("Add")",
-                        dataType: "json"
+                        dataType: "json",
+                        type: "PUT"
                     },
                     parameterMap: function (data, operation) {
-                        debugger;
-                        if (operation !== "read" ) {
-                            return  JSON.stringify(data) ;
+                        if (operation !== "read" && data.models) {
+                            return data.models[0];
                         }
                     }
                 },
@@ -57,8 +58,8 @@
                     model: {
                         id: "Id",
                         fields: {
-                            Id: { editable: false },
-                            Name: { type: "string" },
+                            Id: { editable: false, type: "number" },
+                            Name: { type: "string", validation: { required: true } },
                             Surname: { type: "string" },
                             FoundingDate: { nullable: true }
                         }
@@ -69,7 +70,6 @@
             $("#grid").kendoGrid({
                 dataSource: dataSource,
                 height: 550,
-                //groupable: true,
                 sortable: true,
                 pageable: false,
                 toolbar: ["create"],
@@ -89,10 +89,6 @@
                     }
                 },
                 columns: [
-                    {
-                        field: "Id",
-                        title: "Registration number"
-                    },
                     {
                         field: "Name",
                         title: "Autor Name/Publisher"
@@ -142,27 +138,6 @@
     <style>
         .k-detail-cell .k-tabstrip .k-content {
             padding: 0.2em;
-        }
-
-        .employee-details ul {
-            list-style: none;
-            font-style: italic;
-            margin: 15px;
-            padding: 0;
-        }
-
-            .employee-details ul li {
-                margin: 0;
-                line-height: 1.7em;
-            }
-
-        .employee-details label {
-            display: inline-block;
-            width: 90px;
-            padding-right: 10px;
-            text-align: right;
-            font-style: normal;
-            font-weight: bold;
         }
     </style>
 

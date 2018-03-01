@@ -9,7 +9,7 @@ using Library.DAL.Models;
 
 namespace Library.BLL.Services
 {
-   public class NewspaperService : IGenericServiceDTO<NewspaperDTO>
+    public class NewspaperService : IGenericServiceDTO<NewspaperDTO>
     {
         private readonly IGenericRepository<Newspaper> _newspaperRepository;
 
@@ -27,7 +27,8 @@ namespace Library.BLL.Services
 
         public void Delete(NewspaperDTO newspaperDto)
         {
-            _newspaperRepository.Delete(Mapper.Map<NewspaperDTO, Newspaper>(newspaperDto));
+            var delNewspaper = _newspaperRepository.Get().FirstOrDefault(n => n.Id == newspaperDto.Id);
+            _newspaperRepository.Delete(delNewspaper);
             _newspaperRepository.SaveChanges();
         }
 

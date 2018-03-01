@@ -1,50 +1,192 @@
-﻿@model IEnumerable<Library.WEB.Models.BookViewModel>
-
-@{
+﻿@{
     ViewBag.Title = "List";
 }
 
-<h2>List of books</h2>
+<h2>List</h2>
 
-<p>
-    @Html.ActionLink("Add new book", "Add")
-</p>
-<table class="table">
-    <tr>
-        <th>
-            @Html.DisplayNameFor(model => model.Unit.Title)
-        </th>
-        <th>
-            @Html.DisplayNameFor(model => model.ReleaseDate)
-        </th>
-        <th>
-            @Html.DisplayNameFor(model => model.Unit.Autor)
-        </th>
-        <th></th>
-    </tr>
 
-    @foreach (var item in Model)
-    {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.Unit.Title)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.ReleaseDate)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Unit.Autor.AutorName)
-            </td>
-            <td>
-                @Html.ActionLink("Edit", "Edit", new {id = item.Id}) |
-                @Html.ActionLink("Details", "Details", new {id = item.Id}) |
-                @Html.ActionLink("Delete", "Delete", new {id = item.Id})
-            </td>
-        </tr>
-    }
+<div id="example">
+    <div id="grid"></div>
 
-</table>
+    <script type="text/x-kendo-template" id="template">
+        <div class="tabstrip">
+            <ul>
+                <li class="k-state-active">
+                    Book details
+                </li>
+            </ul>
+            <div>
+                <div class="units"></div>
+            </div>
+        </div>
+
+    </script>
+
+    <script>
+        $(document).ready(function () {
+
+            var dataSource = new kendo.data.DataSource({
+                transport: {
+                    read: {
+                        url: "@Url.Action("GetData")",
+                        dataType: "json"
+                    },
+                    update: {
+                        url: "@Url.Action("Edit")",
+                        dataType: "json",
+                        type: "POST"
+                    },
+                    destroy: {
+                        url: "@Url.Action("Delete")",
+                        dataType: "json",
+                        type: "DELETE"
+                    },
+                    create: {
+                        url: "@Url.Action("Add")",
+                        dataType: "json",
+                        type: "PUT"
+                    },
+                    parameterMap: function (data, operation) {
+                        if (operation !== "read" && data.models) {
+                            return data.models[0];
+                        }
+                    }
+                },
+                batch: true,
+                pageSize: 20,
+                schema: {
+                    model: {
+                        id: "Id",
+                        fields: {
+                            Id: { editable: false, type: "number" },
+                            Title: { type: "string", validation: { required: true } },
+                            Genre: { type: "string", validation: { required: true } },
+                            UnitId: { defaultValue: 1, validation: { required: true } },
+                            Autor: { defaultValue: { Id: 1, Name: "Leo", Surname: "Tolstoy" }, validation: { required: true } },
+                            ReleaseDate: { type: "number", validation: { required: true } }
+                        }
+                    }
+                }
+            });
+
+            $("#grid").kendoGrid({
+                dataSource: dataSource,
+                height: 550,
+                sortable: true,
+                pageable: false,
+                toolbar: ["create"],
+                detailTemplate: kendo.template($("#template").html()),
+                detailInit: detailInit,
+                dataBound: function () {
+                    this.expandRow(this.tbody.find("tr.k-master-row").first());
+                },
+                filterable: {
+                    extra: false,
+                    operators: {
+                        string: {
+                            startswith: "Starts with",
+                            eq: "Is equal to",
+                            neq: "Is not equal to"
+                        }
+                    }
+                },
+                columns: [
+                    {
+                        field: "Title",
+                        title: "Title"
+                    },
+                    {
+                        field: "Autor",
+                        title: "Autor Name/Publisher",
+                        editor: autorsDropDownEditor,
+                        template: "#=Autor.AutorName#"
+                    },
+                    {
+                        field: "Genre",
+                        hidden: true,
+                        editor: genreDropDownEditor
+                    },
+                    {
+                        field: "ReleaseDate",
+                        hidden: true
+                    },
+                    { command: ["edit", "destroy"], title: "&nbsp;", width: "250px" }
+                ],
+                editable: "popup"
+            });
+        });
+
+        function detailInit(e) {
+            var detailRow = e.detailRow;
+            detailRow.find(".tabstrip").kendoTabStrip({
+                animation: {
+                    open: { effects: "fadeIn" }
+                }
+            });
+
+            detailRow.find(".units").kendoGrid({
+                dataSource: {
+                    type: "json",
+                    transport: {
+                        read: "GetData/" + e.data.Id
+                    },
+                    serverPaging: true,
+                    serverSorting: true,
+                    serverFiltering: true,
+                    pageSize: 7
+
+                },
+                scrollable: false,
+                sortable: true,
+                pageable: true,
+                columns: [
+                    { field: "ReleaseDate", title: "Release Date ", width: "300px" },
+                    { field: "Genre", title: "Genre", width: "300px" }
+                ]
+            });
+        }
+
+        function genreDropDownEditor(container, options) {
+            $('<input required name="' + options.field + '"/>')
+                .appendTo(container)
+                .kendoDropDownList({
+                    autoBind: false,
+                    optionLabel: "Select genre",
+                    dataSource: {
+                        type: "json",
+                        transport: {
+                            read: "@Url.Action("GenreList")"
+                        }
+                    }
+                });
+        }
+
+        function autorsDropDownEditor(container, options) {
+            $('<input data-text-field="AutorName" data-value-field="Id" data-bind="value:' + options.field + '"/>')
+                .appendTo(container)
+                .kendoDropDownList({
+                    autoBind: false,
+                    optionLabel: "Select author",
+                    dataTextField: "AutorName",
+                    dataValueField: "Id",
+                    dataSource: {
+                        type: "json",
+                        transport: {
+                            read: "@Url.Action("AutorsList")"
+                        }
+                    }
+                });
+        }
+    </script>
+
+    <style>
+        .k-detail-cell .k-tabstrip .k-content {
+            padding: 0.2em;
+        }
+    </style>
+
+</div>
 <div>
-   @Html.ActionLink("Save as xml", "SaveToFile", new { fileType = "xml" })
+    @Html.ActionLink("Save as xml", "SaveToFile", new { fileType = "xml" })
     @Html.ActionLink("Save as txt", "SaveToFile", new { fileType = "txt" })
 </div>
