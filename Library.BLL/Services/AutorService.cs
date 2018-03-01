@@ -7,7 +7,6 @@ using Library.BLL.Interfaces;
 using Library.DAL.Interfaces;
 using Library.DAL.Models;
 
-
 namespace Library.BLL.Services
 {
     public class AutorService : IGenericServiceDTO<AutorDTO>
