@@ -1,9 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Data.Entity.Core;
 using System.Linq;
 using AutoMapper;
 using Library.BLL.DTO;
 using Library.BLL.ExtensionMethods;
 using Library.BLL.Interfaces;
+using Library.DAL.Enums;
 using Library.DAL.Interfaces;
 using Library.DAL.Models;
 
@@ -13,46 +16,59 @@ namespace Library.BLL.Services
     {
         private readonly IGenericRepository<Brochure> _brochureRepository;
 
-        public BrochureService(IGenericRepository<Brochure> brochureDtoRepository)
+        public BrochureService(IGenericRepository<Brochure> brochureRepository)
         {
-            _brochureRepository = brochureDtoRepository;
+            _brochureRepository = brochureRepository;
         }
 
-        public void Create(BrochureDTO brochureDto)
+        public void Create(BrochureDTO brochureFromWeb)
         {
-            brochureDto.Unit.UnitName = nameof(Brochure);
-            _brochureRepository.Add(Mapper.Map<BrochureDTO, Brochure>(brochureDto));
+            var brochureAdd = new Brochure()
+            {
+                Type = (BrochureType)Enum.Parse(typeof(BrochureType), brochureFromWeb.Type.ToString()),
+                ReleaseDate = brochureFromWeb.ReleaseDate,
+                UnitId = brochureFromWeb.Unit.Id,
+                Unit = Mapper.Map<LibraryStorageUnitDTO, LibraryStorageUnit>(brochureFromWeb.Unit)
+            };
+            brochureAdd.Unit.UnitName = nameof(Brochure);
+            brochureAdd.Unit.Autor = null;
+            _brochureRepository.Add(brochureAdd);
             _brochureRepository.SaveChanges();
         }
 
-        public void Delete(BrochureDTO brochureDto)
+        public void Delete(BrochureDTO brochureFromWeb)
         {
-            var delBrochure = _brochureRepository.Get().FirstOrDefault(b => b.Id == brochureDto.Id);
-            _brochureRepository.Delete(delBrochure);
+            var brochureForDelete = _brochureRepository.Get().FirstOrDefault(b => b.Id == brochureFromWeb.Id);
+            _brochureRepository.Delete(brochureForDelete);
             _brochureRepository.SaveChanges();
         }
 
-        public void Edit(BrochureDTO brochureDto)
+        public void Edit(BrochureDTO brochureFromWeb)
         {
-            _brochureRepository.Edit(Mapper.Map<BrochureDTO, Brochure>(brochureDto));
-            _brochureRepository.SaveChanges();
-        }
+            var bookForEdit = _brochureRepository.Get().FirstOrDefault(u => u.Id == brochureFromWeb.Id);
+            if (bookForEdit == null)
+            {
+                throw new ObjectNotFoundException();
+            }
+            bookForEdit.Type = (BrochureType)Enum.Parse(typeof(BrochureType), brochureFromWeb.Type.ToString());
+            bookForEdit.ReleaseDate = brochureFromWeb.ReleaseDate;
 
-        public BrochureDTO FindById(int? id)
-        {
-            var brochure = _brochureRepository.FindById(id);
-            return Mapper.Map<Brochure, BrochureDTO>(brochure);
+            _brochureRepository.Edit(bookForEdit);
+            _brochureRepository.SaveChanges();
         }
 
         public IEnumerable<BrochureDTO> Get()
         {
-            return Mapper.Map<IEnumerable<Brochure>, List<BrochureDTO>>(_brochureRepository.GetWithInclude(b => b.Unit.Autor));
+            var brochureList = _brochureRepository.GetWithInclude(b => b.Unit.Autor);
+            var brochureListForWeb = Mapper.Map<IEnumerable<Brochure>, List<BrochureDTO>>(brochureList);
+            return brochureListForWeb;
         }
 
         public BrochureDTO GetWithInclude(int? id)
         {
             var brochure = _brochureRepository.GetWithInclude(b => b.Unit.Autor, b => b.Unit.Title).FirstOrDefault(b => b.Id == id);
-            return Mapper.Map<Brochure, BrochureDTO>(brochure);
+            var brochureListForWeb = Mapper.Map<Brochure, BrochureDTO>(brochure);
+            return brochureListForWeb;
         }
 
         public void SaveToFile(string connectionString)

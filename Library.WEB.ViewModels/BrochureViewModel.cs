@@ -1,13 +1,14 @@
-﻿namespace Library.WEB.Models
+﻿namespace Library.WEB.ViewModels
 {
-    public class MagazineViewModel
+    public class BrochureViewModel
     {
         public int Id { get; set; }
         public int ReleaseDate { get; set; }
-        public int IssueNumber { get; set; }
-        public string Style { get; set; }
+        public string Type { get; set; }
         public int UnitId { get; set; }
+        public int AutorId { get; set; }
         public string Title { get; set; }
         public AutorViewModel Autor { get; set; }
+       
     }
 }

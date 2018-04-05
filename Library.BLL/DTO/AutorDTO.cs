@@ -9,15 +9,11 @@ namespace Library.BLL.DTO
         public string Surname { get; set; }
         public List<LibraryStorageUnitDTO> Units { get; set; }
         public string AutorName { get { return $"{Name} {Surname}"; } }
-        public int FoundingDate { get; set; }
+        public int? FoundingDate { get; set; }
 
         public AutorDTO()
         {
             Units = new List<LibraryStorageUnitDTO>();
-        }
-        public override string ToString()
-        {
-            return AutorName;
         }
     }
 }

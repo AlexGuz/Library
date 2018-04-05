@@ -1,19 +1,22 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
 using System.Net;
 using System.Web.Mvc;
+using AutoMapper;
+using Library.BLL.DTO;
 using Library.BLL.Services;
+using Library.WEB.ViewModels;
 
 namespace Library.WEB.Controllers
 {
     public class LibraryStorageUnitController : Controller
     {
-        private readonly AutorService _autorDtoRepo;
-        private readonly LibraryStorageUnitService _unitDtoRepo;
+        private readonly AutorService _autorService;
+        private readonly LibraryStorageUnitService _libraryStorageUnitService;
 
-        public LibraryStorageUnitController(AutorService autorDtoRepo, LibraryStorageUnitService unitDtoRepo)
+        public LibraryStorageUnitController(AutorService autorService, LibraryStorageUnitService libraryStorageUnitService)
         {
-            _autorDtoRepo = autorDtoRepo;
-            _unitDtoRepo = unitDtoRepo;
+            _autorService = autorService;
+            _libraryStorageUnitService = libraryStorageUnitService;
         }
         public ActionResult List()
         {
@@ -22,19 +25,10 @@ namespace Library.WEB.Controllers
 
         public JsonResult GetData()
         {
-            var unitsDto = _unitDtoRepo.Get();
+            var libraryStorageUnitDto = _libraryStorageUnitService.Get();
+            var libraryStorageUnitForView = Mapper.Map<IEnumerable<LibraryStorageUnitDTO>, List<LibraryStorageUnitViewModel>>(libraryStorageUnitDto);
 
-            var unitView =
-                unitsDto.Select(
-                    u =>
-                        new
-                        {
-                            u.Title,
-                            u.UnitName,
-                            u.Autor.AutorName
-                        }).ToList();
-
-            return Json(unitView, JsonRequestBehavior.AllowGet);
+            return Json(libraryStorageUnitForView, JsonRequestBehavior.AllowGet);
         }
 
         public ActionResult SaveToFile(string fileType, string path)
@@ -44,11 +38,11 @@ namespace Library.WEB.Controllers
                 var filePath = Server.HtmlEncode(Request.PhysicalApplicationPath);
                 string connectionString = filePath + "LibraryStorageUnits." + fileType;
 
-                _autorDtoRepo.SaveToFile(connectionString);
+                _autorService.SaveToFile(connectionString);
                 return RedirectToAction("SaveToFile", "Home", new
                 {
                     name = "LibraryStorageUnits." + fileType,
-                    filePath
+                    path = filePath
                 });
             }
 

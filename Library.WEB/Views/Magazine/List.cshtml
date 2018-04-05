@@ -77,7 +77,7 @@
                 pageable: false,
                 toolbar: ["create"],
                 detailTemplate: kendo.template($("#template").html()),
-                detailInit: detailInit,
+                detailInit: magazineDetailInit,
                 dataBound: function () {
                     this.expandRow(this.tbody.find("tr.k-master-row").first());
                 },
@@ -105,7 +105,7 @@
                     {
                         field: "Style",
                         hidden: true,
-                        editor: styleDropDownEditor
+                        editor: magazineStyleDropDownEditor
                     },
                     {
                         field: "ReleaseDate",
@@ -116,77 +116,7 @@
                 editable: "popup"
             });
         });
-
-        function detailInit(e) {
-            var detailRow = e.detailRow;
-            detailRow.find(".tabstrip").kendoTabStrip({
-                animation: {
-                    open: { effects: "fadeIn" }
-                }
-            });
-
-            detailRow.find(".units").kendoGrid({
-                dataSource: {
-                    type: "json",
-                    transport: {
-                        read: "GetData/" + e.data.Id
-                    },
-                    serverPaging: true,
-                    serverSorting: true,
-                    serverFiltering: true,
-                    pageSize: 7
-
-                },
-                scrollable: false,
-                sortable: true,
-                pageable: true,
-                columns: [
-                    { field: "ReleaseDate", title: "Release Date ", width: "300px" },
-                    { field: "IssueNumber", title: "Issue Number ", width: "300px" },
-                    { field: "Style", title: "Style", width: "300px" }
-                ]
-            });
-        }
-
-        function styleDropDownEditor(container, options) {
-            $('<input required name="' + options.field + '"/>')
-                .appendTo(container)
-                .kendoDropDownList({
-                    autoBind: false,
-                    optionLabel: "Select genre",
-                    dataSource: {
-                        type: "json",
-                        transport: {
-                            read: "@Url.Action("GenreList")"
-                        }
-                    }
-                });
-        }
-
-        function autorsDropDownEditor(container, options) {
-            $('<input data-text-field="AutorName" data-value-field="Id" data-bind="value:' + options.field + '"/>')
-                .appendTo(container)
-                .kendoDropDownList({
-                    autoBind: false,
-                    optionLabel: "Select author",
-                    dataTextField: "AutorName",
-                    dataValueField: "Id",
-                    dataSource: {
-                        type: "json",
-                        transport: {
-                            read: "@Url.Action("AutorsList")"
-                        }
-                    }
-                });
-        }
     </script>
-
-    <style>
-        .k-detail-cell .k-tabstrip .k-content {
-            padding: 0.2em;
-        }
-    </style>
-
 </div>
 <div>
     @Html.ActionLink("Save as xml", "SaveToFile", new { fileType = "xml" })

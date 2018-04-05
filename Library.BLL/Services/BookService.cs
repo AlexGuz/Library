@@ -1,9 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Data.Entity.Core;
 using System.Linq;
 using AutoMapper;
 using Library.BLL.DTO;
 using Library.BLL.ExtensionMethods;
 using Library.BLL.Interfaces;
+using Library.DAL.Enums;
 using Library.DAL.Interfaces;
 using Library.DAL.Models;
 
@@ -13,46 +16,59 @@ namespace Library.BLL.Services
     {
         private readonly IGenericRepository<Book> _bookRepository;
 
-        public BookService(IGenericRepository<Book> bookDtoRepository)
+        public BookService(IGenericRepository<Book> bookRepository)
         {
-            _bookRepository = bookDtoRepository;
+            _bookRepository = bookRepository;
         }
 
-        public void Create(BookDTO bookDto)
+        public void Create(BookDTO bookFromWeb)
         {
-            bookDto.Unit.UnitName = nameof(Book);
-            _bookRepository.Add(Mapper.Map<BookDTO, Book>(bookDto));
+            var bookForAdd = new Book
+            {
+                Genre = (BookGenre)Enum.Parse(typeof(BookGenre), bookFromWeb.Genre.ToString()),
+                ReleaseDate = bookFromWeb.ReleaseDate,
+                UnitId = bookFromWeb.Unit.Id,
+                Unit = Mapper.Map<LibraryStorageUnitDTO, LibraryStorageUnit>(bookFromWeb.Unit)
+            };
+            bookForAdd.Unit.UnitName = nameof(Book);
+            bookForAdd.Unit.Autor = null;
+            _bookRepository.Add(bookForAdd);
             _bookRepository.SaveChanges();
         }
 
-        public void Delete(BookDTO bookDto)
+        public void Delete(BookDTO bookFromWeb)
         {
-            var delBook = _bookRepository.Get().FirstOrDefault(b => b.Id == bookDto.Id);
-            _bookRepository.Delete(delBook);
+            var bookForDelete = _bookRepository.Get().FirstOrDefault(b => b.Id == bookFromWeb.Id);
+            _bookRepository.Delete(bookForDelete);
             _bookRepository.SaveChanges();
         }
 
-        public void Edit(BookDTO bookDto)
+        public void Edit(BookDTO bookFromWeb)
         {
-            _bookRepository.Edit(Mapper.Map<BookDTO, Book>(bookDto));
-            _bookRepository.SaveChanges();
-        }
+            var bookForEdit = _bookRepository.Get().FirstOrDefault(u => u.Id == bookFromWeb.Id);
+            if (bookForEdit == null)
+            {
+                throw new ObjectNotFoundException();
+            }
+            bookForEdit.Genre = (BookGenre)Enum.Parse(typeof(BookGenre), bookFromWeb.Genre.ToString());
+            bookForEdit.ReleaseDate = bookFromWeb.ReleaseDate;
 
-        public BookDTO FindById(int? id)
-        {
-            var book = _bookRepository.FindById(id);
-            return Mapper.Map<Book, BookDTO>(book);
+            _bookRepository.Edit(bookForEdit);
+            _bookRepository.SaveChanges();
         }
 
         public IEnumerable<BookDTO> Get()
         {
-            return Mapper.Map<IEnumerable<Book>, List<BookDTO>>(_bookRepository.GetWithInclude(b => b.Unit.Autor));
+            var books = _bookRepository.GetWithInclude(b => b.Unit.Autor);
+            var booksForview = Mapper.Map<IEnumerable<Book>, List<BookDTO>>(books);
+            return booksForview;
         }
 
         public BookDTO GetWithInclude(int? id)
         {
             var book = _bookRepository.GetWithInclude(b => b.Unit.Autor, b => b.Unit.Title).FirstOrDefault(b => b.Id == id);
-            return Mapper.Map<Book, BookDTO>(book);
+            var bookForview = Mapper.Map<Book, BookDTO>(book);
+            return bookForview;
         }
 
         public void SaveToFile(string connectionString)

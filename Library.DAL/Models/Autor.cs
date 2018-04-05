@@ -18,9 +18,5 @@ namespace Library.DAL.Models
         {
             Units = new List<LibraryStorageUnit>();
         }
-        public override string ToString()
-        {
-            return AutorName;
-        }
     }
 }

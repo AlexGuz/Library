@@ -1,4 +1,4 @@
-﻿namespace Library.WEB.Models
+﻿namespace Library.WEB.ViewModels
 {
     public class NewspaperViewModel
     {

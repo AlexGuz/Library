@@ -13,44 +13,54 @@ namespace Library.BLL.Services
     {
         private readonly IGenericRepository<Autor> _autorRepository;
 
-        public AutorService(IGenericRepository<Autor> autorDtoRepository)
+        public AutorService(IGenericRepository<Autor> autorRepository)
         {
-            _autorRepository = autorDtoRepository;
+            _autorRepository = autorRepository;
         }
 
-        public void Create(AutorDTO autorDto)
+        public void Create(AutorDTO autorFromWeb)
         {
-            _autorRepository.Add(Mapper.Map<AutorDTO, Autor>(autorDto));
+            var newAutor = Mapper.Map<AutorDTO, Autor>(autorFromWeb);
+            _autorRepository.Add(newAutor);
             _autorRepository.SaveChanges();
         }
 
-        public void Delete(AutorDTO autorDto)
+        public void Delete(AutorDTO autorFromWeb)
         {
-            _autorRepository.Delete(Mapper.Map<AutorDTO, Autor>(autorDto));
+            var autorForDelete = Mapper.Map<AutorDTO, Autor>(autorFromWeb);
+            _autorRepository.Delete(autorForDelete);
             _autorRepository.SaveChanges();
         }
 
-        public void Edit(AutorDTO autorDto)
+        public void Edit(AutorDTO autorFromWeb)
         {
-            _autorRepository.Edit(Mapper.Map<AutorDTO, Autor>(autorDto));
+            var autorForEdit = Mapper.Map<AutorDTO, Autor>(autorFromWeb);
+            _autorRepository.Edit(autorForEdit);
             _autorRepository.SaveChanges();
-        }
-
-        public AutorDTO FindById(int? id)
-        {
-            var autor = _autorRepository.FindById(id);
-            return Mapper.Map<Autor, AutorDTO>(autor);
         }
 
         public IEnumerable<AutorDTO> Get()
         {
-            return Mapper.Map<IEnumerable<Autor>, List<AutorDTO>>(_autorRepository.Get());
+            var autorsList = _autorRepository.Get();
+            var autorsForViewList = Mapper.Map<IEnumerable<Autor>, List<AutorDTO>>(autorsList)
+                .Select(
+                    a =>
+                        new AutorDTO
+                        {
+                            Id = a.Id,
+                            Name = a.Name,
+                            Surname = a.Surname,
+                            FoundingDate = a.FoundingDate != 0 ? a.FoundingDate : null
+                        }).ToList();
+
+            return autorsForViewList;
         }
 
         public AutorDTO GetWithInclude(int? id)
         {
             var autor = _autorRepository.GetWithInclude(a => a.Units).FirstOrDefault(a => a.Id == id);
-            return Mapper.Map<Autor, AutorDTO>(autor);
+            var autorForView = Mapper.Map<Autor, AutorDTO>(autor);
+            return autorForView;
         }
 
         public void SaveToFile(string connectionString)

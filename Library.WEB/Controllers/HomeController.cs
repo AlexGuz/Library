@@ -1,4 +1,5 @@
-﻿using System.Web.Mvc;
+﻿using System.Dynamic;
+using System.Web.Mvc;
 
 namespace Library.WEB.Controllers
 {
@@ -11,9 +12,11 @@ namespace Library.WEB.Controllers
 
         public ActionResult SaveToFile(string path, string name)
         {
-            ViewBag.FileName = name;
-            ViewBag.FilePath = path;
-            return View();
+            dynamic info = new ExpandoObject();
+            info.Path = path;
+            info.Name = name;
+
+            return View(info);
         }
     }
 }

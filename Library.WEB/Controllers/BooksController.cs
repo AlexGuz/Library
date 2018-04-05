@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Data.Entity.Core;
 using System.Linq;
 using System.Net;
 using System.Web.Mvc;
@@ -6,21 +8,21 @@ using AutoMapper;
 using Library.BLL.DTO;
 using Library.BLL.EnumsDTO;
 using Library.BLL.Services;
-using Library.WEB.Models;
+using Library.WEB.ViewModels;
 
 namespace Library.WEB.Controllers
 {
     public class BooksController : Controller
     {
-        private readonly BookService _bookDtoRepo;
-        private readonly AutorService _autorDtoRepo;
-        private readonly LibraryStorageUnitService _unitDtoRepo;
+        private readonly BookService _bookService;
+        private readonly AutorService _autorService;
+        private readonly LibraryStorageUnitService _libraryStorageUnitService;
 
-        public BooksController(AutorService autorDtoRepo, BookService bookDtoRepo, LibraryStorageUnitService unitDtoRepo)
+        public BooksController(AutorService autorService, BookService bookService, LibraryStorageUnitService libraryStorageUnitService)
         {
-            _bookDtoRepo = bookDtoRepo;
-            _autorDtoRepo = autorDtoRepo;
-            _unitDtoRepo = unitDtoRepo;
+            _bookService = bookService;
+            _autorService = autorService;
+            _libraryStorageUnitService = libraryStorageUnitService;
         }
 
         public ActionResult List()
@@ -30,35 +32,21 @@ namespace Library.WEB.Controllers
 
         public JsonResult GetData(int? id)
         {
-            var booksDtos = _bookDtoRepo.Get();
+            var booksDto = _bookService.Get();
             if (id != null)
             {
-                booksDtos = _bookDtoRepo.Get().Where(b => b.Id == id);
+                booksDto = _bookService.Get().Where(b => b.Id == id);
             }
 
-            var booksView = booksDtos.Select(
-                    b =>
-                        new BookViewModel
-                        {
-                            Id = b.Id,
-                            Title = b.Unit.Title,
-                            Autor = Mapper.Map<AutorDTO, AutorViewModel>(b.Unit.Autor),
-                            Genre = b.Genre.ToString(),
-                            ReleaseDate = b.ReleaseDate,
-                            UnitId = b.Unit.Id,
-                        }).ToList();
+            var booksForView = Mapper.Map<IEnumerable<BookDTO>, List<BookViewModel>>(booksDto);
 
-            return Json(booksView, JsonRequestBehavior.AllowGet);
+            return Json(booksForView, JsonRequestBehavior.AllowGet);
         }
 
         public JsonResult AutorsList()
         {
-            var autorsNameList = _autorDtoRepo.Get().Select(a => new AutorViewModel
-            {
-                Id = a.Id,
-                Name = a.Name,
-                Surname = a.Surname
-            });
+            var autorsDto = _autorService.Get();
+            var autorsNameList = Mapper.Map<IEnumerable<AutorDTO>, List<AutorViewModel>>(autorsDto);
 
             return Json(autorsNameList, JsonRequestBehavior.AllowGet);
         }
@@ -70,74 +58,58 @@ namespace Library.WEB.Controllers
         }
 
         [HttpPost]
-        public ActionResult Edit(BookViewModel bookView)
+        public ActionResult Edit(BookViewModel bookFromView)
         {
-            if (bookView == null || !ModelState.IsValid)
+            if (bookFromView == null || !ModelState.IsValid)
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
 
-            var unitForEdit = _unitDtoRepo.Get().FirstOrDefault(u => u.Id == bookView.UnitId);
-
-            if (unitForEdit != null)
+            try
             {
-                unitForEdit.Title = bookView.Title;
-                unitForEdit.AutorId = bookView.Autor.Id;
-                unitForEdit.Autor = _autorDtoRepo.Get().FirstOrDefault(a => a.Id == bookView.Autor.Id);
-                _unitDtoRepo.Edit(unitForEdit);
+                var libraryStorageUnitForEdit = Mapper.Map<BookViewModel, LibraryStorageUnitDTO>(bookFromView);
+                _libraryStorageUnitService.Edit(libraryStorageUnitForEdit);
+
+                var bookForEdit = Mapper.Map<BookViewModel, BookDTO>(bookFromView);
+                _bookService.Edit(bookForEdit);
+            }
+            catch (ObjectNotFoundException)
+            {
+                return new HttpStatusCodeResult(HttpStatusCode.NotFound);
             }
 
-            var bookForEdit = _bookDtoRepo.Get().FirstOrDefault(u => u.Id == bookView.Id);
-
-            if (bookForEdit != null)
-            {
-                bookForEdit.Unit = unitForEdit;
-                bookForEdit.Genre = (BookGenreDTO)Enum.Parse(typeof(BookGenreDTO), bookView.Genre);
-                bookForEdit.ReleaseDate = bookView.ReleaseDate;
-
-                _bookDtoRepo.Edit(bookForEdit);
-            }
-            return Json(bookView);
+            return Json(bookFromView);
         }
 
         [HttpPut]
-        public ActionResult Add(BookViewModel bookView)
+        public ActionResult Add(BookViewModel bookFromView)
         {
-            if (bookView == null || !ModelState.IsValid)
+            if (bookFromView == null || !ModelState.IsValid)
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
+            var libraryStorageUnitForAdd = Mapper.Map<BookViewModel, LibraryStorageUnitDTO>(bookFromView);
+            
+            var bookForAdd = Mapper.Map<BookViewModel, BookDTO>(bookFromView);
+            bookForAdd.Unit = libraryStorageUnitForAdd;
+            _bookService.Create(bookForAdd);
 
-            var unitForAdd = new LibraryStorageUnitDTO
-            {
-                AutorId = bookView.Autor.Id,
-                Title = bookView.Title
-            };
-
-            var bookForAdd = new BookDTO
-            {
-                Genre = (BookGenreDTO)Enum.Parse(typeof(BookGenreDTO), bookView.Genre),
-                ReleaseDate = bookView.ReleaseDate,
-                Unit = unitForAdd,
-                UnitId = unitForAdd.Id
-            };
-
-            _bookDtoRepo.Create(bookForAdd);
-            return Json(bookView);
+            return Json(bookFromView);
         }
 
-        public ActionResult Delete(BookViewModel bookView)
+        public ActionResult Delete(BookViewModel bookFromView)
         {
-            var bookDto = _bookDtoRepo.Get().FirstOrDefault(b => b.Id == bookView.Id);
-            var unitDto = _unitDtoRepo.Get().FirstOrDefault(u => u.Id == bookView.UnitId);
+            var bookDto = _bookService.Get().FirstOrDefault(b => b.Id == bookFromView.Id);
+            var unitDto = _libraryStorageUnitService.Get().FirstOrDefault(u => u.Id == bookFromView.UnitId);
 
             if (bookDto == null || unitDto == null)
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            _bookDtoRepo.Delete(bookDto);
-            _unitDtoRepo.Delete(unitDto);
-            return Json(bookView);
+            _bookService.Delete(bookDto);
+            _libraryStorageUnitService.Delete(unitDto);
+
+            return Json(bookFromView);
         }
 
         public ActionResult SaveToFile(string fileType, string path)
@@ -147,11 +119,11 @@ namespace Library.WEB.Controllers
                 var filePath = Server.HtmlEncode(Request.PhysicalApplicationPath);
                 string connectionString = filePath + "Books." + fileType;
 
-                _autorDtoRepo.SaveToFile(connectionString);
+                _autorService.SaveToFile(connectionString);
                 return RedirectToAction("SaveToFile", "Home", new
                 {
                     name = "Books." + fileType,
-                    filePath
+                    path = filePath
                 });
             }
 

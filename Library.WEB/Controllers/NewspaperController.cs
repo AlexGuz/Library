@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Web.Mvc;
@@ -6,21 +7,21 @@ using AutoMapper;
 using Library.BLL.DTO;
 using Library.BLL.EnumsDTO;
 using Library.BLL.Services;
-using Library.WEB.Models;
+using Library.WEB.ViewModels;
 
 namespace Library.WEB.Controllers
 {
     public class NewspaperController : Controller
     {
-        private readonly NewspaperService _newspaperDtoRepo;
-        private readonly AutorService _autorDtoRepo;
-        private readonly LibraryStorageUnitService _unitDtoRepo;
+        private readonly NewspaperService _newspaperService;
+        private readonly AutorService _autorService;
+        private readonly LibraryStorageUnitService _libraryStorageUnitService;
 
-        public NewspaperController(AutorService autorDtoRepo, NewspaperService newspaperDtoRepo, LibraryStorageUnitService unitDtoRepo)
+        public NewspaperController(AutorService autorService, NewspaperService newspaperService, LibraryStorageUnitService libraryStorageUnitService)
         {
-            _newspaperDtoRepo = newspaperDtoRepo;
-            _autorDtoRepo = autorDtoRepo;
-            _unitDtoRepo = unitDtoRepo;
+            _newspaperService = newspaperService;
+            _autorService = autorService;
+            _libraryStorageUnitService = libraryStorageUnitService;
         }
 
         public ActionResult List()
@@ -30,36 +31,21 @@ namespace Library.WEB.Controllers
 
         public JsonResult GetData(int? id)
         {
-            var newspaperDtos = _newspaperDtoRepo.Get();
+            var newspapersDto = _newspaperService.Get();
             if (id != null)
             {
-                newspaperDtos = _newspaperDtoRepo.Get().Where(n => n.Id == id);
+                newspapersDto = _newspaperService.Get().Where(b => b.Id == id);
             }
 
-            var newspaperView = newspaperDtos.Select(
-                    n =>
-                        new NewspaperViewModel
-                        {
-                            Id = n.Id,
-                            Title = n.Unit.Title,
-                            Autor = Mapper.Map<AutorDTO, AutorViewModel>(n.Unit.Autor),
-                            Type = n.Type.ToString(),
-                            ReleaseDate = n.ReleaseDate,
-                            UnitId = n.Unit.Id,
-                            IssueNumber = n.IssueNumber
-                        }).ToList();
+            var newspapersForView = Mapper.Map<IEnumerable<NewspaperDTO>, List<NewspaperViewModel>>(newspapersDto);
 
-            return Json(newspaperView, JsonRequestBehavior.AllowGet);
+            return Json(newspapersForView, JsonRequestBehavior.AllowGet);
         }
 
         public JsonResult AutorsList()
         {
-            var autorsNameList = _autorDtoRepo.Get().Select(a => new AutorViewModel
-            {
-                Id = a.Id,
-                Name = a.Name,
-                Surname = a.Surname
-            });
+            var autorsDto = _autorService.Get();
+            var autorsNameList = Mapper.Map<IEnumerable<AutorDTO>, List<AutorViewModel>>(autorsDto);
 
             return Json(autorsNameList, JsonRequestBehavior.AllowGet);
         }
@@ -71,76 +57,57 @@ namespace Library.WEB.Controllers
         }
 
         [HttpPost]
-        public ActionResult Edit(NewspaperViewModel newspaperView)
+        public ActionResult Edit(NewspaperViewModel newspaperFromView)
         {
-            if (newspaperView == null || !ModelState.IsValid)
+            if (newspaperFromView == null || !ModelState.IsValid)
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
 
-            var unitForEdit = _unitDtoRepo.Get().FirstOrDefault(u => u.Id == newspaperView.UnitId);
-
-            if (unitForEdit != null)
+            try
             {
-                unitForEdit.Title = newspaperView.Title;
-                unitForEdit.AutorId = newspaperView.Autor.Id;
-                unitForEdit.Autor = _autorDtoRepo.Get().FirstOrDefault(a => a.Id == newspaperView.Autor.Id);
-                _unitDtoRepo.Edit(unitForEdit);
+                var libraryStorageUnitForEdit = Mapper.Map<NewspaperViewModel, LibraryStorageUnitDTO>(newspaperFromView);
+                _libraryStorageUnitService.Edit(libraryStorageUnitForEdit);
+
+                var newspaperForEdit = Mapper.Map<NewspaperViewModel, NewspaperDTO>(newspaperFromView);
+                _newspaperService.Edit(newspaperForEdit);
+            }
+            catch (Exception)
+            {
+                return new HttpStatusCodeResult(HttpStatusCode.NotFound);
             }
 
-            var newspaperForEdit = _newspaperDtoRepo.Get().FirstOrDefault(u => u.Id == newspaperView.Id);
-
-            if (newspaperForEdit != null)
-            {
-                newspaperForEdit.Unit = unitForEdit;
-                newspaperForEdit.Type = (NewspaperTypeDTO)Enum.Parse(typeof(NewspaperTypeDTO), newspaperView.Type);
-                newspaperForEdit.ReleaseDate = newspaperView.ReleaseDate;
-                newspaperForEdit.IssueNumber = newspaperView.IssueNumber;
-
-                _newspaperDtoRepo.Edit(newspaperForEdit);
-            }
-            return Json(newspaperView);
+            return Json(newspaperFromView);
         }
 
         [HttpPut]
-        public ActionResult Add(NewspaperViewModel newspaperView)
+        public ActionResult Add(NewspaperViewModel newspaperFromView)
         {
-            if (newspaperView == null || !ModelState.IsValid)
+            if (newspaperFromView == null || !ModelState.IsValid)
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
+            var libraryStorageUnitForAdd = Mapper.Map<NewspaperViewModel, LibraryStorageUnitDTO>(newspaperFromView);
 
-            var unitForAdd = new LibraryStorageUnitDTO
-            {
-                AutorId = newspaperView.Autor.Id,
-                Title = newspaperView.Title
-            };
+            var newspaperForAdd = Mapper.Map<NewspaperViewModel, NewspaperDTO>(newspaperFromView);
+            newspaperForAdd.Unit = libraryStorageUnitForAdd;
+            _newspaperService.Create(newspaperForAdd);
 
-            var newspaperForAdd = new NewspaperDTO
-            {
-                Type = (NewspaperTypeDTO)Enum.Parse(typeof(NewspaperTypeDTO), newspaperView.Type),
-                ReleaseDate = newspaperView.ReleaseDate,
-                IssueNumber = newspaperView.IssueNumber,
-                Unit = unitForAdd,
-                UnitId = unitForAdd.Id
-            };
-
-            _newspaperDtoRepo.Create(newspaperForAdd);
-            return Json(newspaperView);
+            return Json(newspaperFromView);
         }
 
-        public ActionResult Delete(NewspaperViewModel newspaperView)
+        public ActionResult Delete(NewspaperViewModel newspaperFromView)
         {
-            var newspaperDto = _newspaperDtoRepo.Get().FirstOrDefault(n => n.Id == newspaperView.Id);
-            var unitDto = _unitDtoRepo.Get().FirstOrDefault(u => u.Id == newspaperView.UnitId);
+            var newspaperForDelete = _newspaperService.Get().FirstOrDefault(n => n.Id == newspaperFromView.Id);
+            var unitForDelete = _libraryStorageUnitService.Get().FirstOrDefault(u => u.Id == newspaperFromView.UnitId);
 
-            if (newspaperDto == null || unitDto == null)
+            if (newspaperForDelete == null || unitForDelete == null)
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            _newspaperDtoRepo.Delete(newspaperDto);
-            _unitDtoRepo.Delete(unitDto);
-            return Json(newspaperView);
+            _newspaperService.Delete(newspaperForDelete);
+            _libraryStorageUnitService.Delete(unitForDelete);
+            return Json(newspaperFromView);
         }
 
         public ActionResult SaveToFile(string fileType, string path)
@@ -150,11 +117,11 @@ namespace Library.WEB.Controllers
                 var filePath = Server.HtmlEncode(Request.PhysicalApplicationPath);
                 string connectionString = filePath + "Newspapers." + fileType;
 
-                _autorDtoRepo.SaveToFile(connectionString);
+                _autorService.SaveToFile(connectionString);
                 return RedirectToAction("SaveToFile", "Home", new
                 {
                     name = "Newspapers." + fileType,
-                    filePath
+                    path = filePath
                 });
             }
 

@@ -7,7 +7,6 @@ namespace Library.BLL.Interfaces
         void Create(T item);
         void Delete(T item);
         void Edit(T item);
-        T FindById(int? item);
         IEnumerable<T> Get();
         T GetWithInclude(int? item);
         void SaveToFile(string connectionString);

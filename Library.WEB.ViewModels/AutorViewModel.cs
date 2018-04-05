@@ -1,4 +1,4 @@
-﻿namespace Library.WEB.Models
+﻿namespace Library.WEB.ViewModels
 {
     public class AutorViewModel
     {
@@ -7,10 +7,5 @@
         public string Surname { get; set; }
         public string AutorName { get { return $"{Name} {Surname}"; } }
         public int? FoundingDate { get; set; }
-        
-        public override string ToString()
-        {
-            return AutorName;
-        }
     }
 }

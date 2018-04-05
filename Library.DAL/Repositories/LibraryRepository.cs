@@ -24,15 +24,6 @@ namespace Library.DAL.Repositories
             _context.SaveChanges();
         }
 
-        public T FindById(int? id)
-        {
-            if (id == null)
-            {
-                throw new ArgumentNullException(nameof(id));
-            }
-            return _dbSet.Find(id);
-        }
-
         public void Delete(T item)
         {
             _context.Entry(item).State = EntityState.Deleted;
@@ -50,20 +41,9 @@ namespace Library.DAL.Repositories
             return _dbSet.AsNoTracking().ToList();
         }
 
-        public IEnumerable<T> Get(Func<T, bool> predicate)
-        {
-            return _dbSet.AsNoTracking().Where(predicate).ToList();
-        }
-
         public IEnumerable<T> GetWithInclude(params Expression<Func<T, object>>[] includeProperties)
         {
             return Include(includeProperties).ToList();
-        }
-
-        public IEnumerable<T> GetWithInclude(Func<T, bool> predicate, params Expression<Func<T, object>>[] includeProperties)
-        {
-            var query = Include(includeProperties).ToList();
-            return query.Where(predicate);
         }
 
         private IQueryable<T> Include(params Expression<Func<T, object>>[] includeProperties)
