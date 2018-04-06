@@ -1,4 +1,5 @@
 ﻿function autorsDetailInit(e) {
+    debugger;
     var detailRow = e.detailRow;
     detailRow.find(".tabstrip").kendoTabStrip({
         animation: {

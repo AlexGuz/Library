@@ -8,12 +8,12 @@ using Library.WEB.ViewModels;
 
 namespace Library.WEB.ApiControllers.Controllers
 {
-    public class AutorsController : ApiController
+    public class AutorsApiController : ApiController
     {
         private readonly AutorService _autorService;
         private readonly LibraryStorageUnitService _libraryStorageUnitService;
 
-        public AutorsController(AutorService autorService, LibraryStorageUnitService libraryStorageUnitService)
+        public AutorsApiController(AutorService autorService, LibraryStorageUnitService libraryStorageUnitService)
         {
             _autorService = autorService;
             _libraryStorageUnitService = libraryStorageUnitService;

@@ -7,6 +7,7 @@ using AutoMapper;
 using Library.BLL.Infrastructure;
 using Library.WEB.ApiControllers;
 using Library.WEB.Utill;
+using Ninject.Web.Common.WebHost;
 using Ninject.Web.Mvc;
 
 namespace Library.WEB

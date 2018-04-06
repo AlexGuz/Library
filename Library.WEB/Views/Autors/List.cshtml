@@ -28,22 +28,22 @@
             var dataSource = new kendo.data.DataSource({
                 transport: {
                     read: {
-                        url: "@Url.HttpRouteUrl("DefaultApi", new { controller="Autors"})",
+                        url: "@Url.HttpRouteUrl("DefaultApi", new { controller= "AutorsApi" })",
                         dataType: "json",
-                        type:"GET"
+                        type: "GET"
                     },
                     update: {
-                        url: "api/autors",
+                        url: "@Url.HttpRouteUrl("DefaultApi", new { controller="Autors"})",
                         dataType: "json",
                         type: "POST"
                     },
                     destroy: {
-                        url: "api/autors",
+                        url: "@Url.HttpRouteUrl("DefaultApi", new { controller="Autors"})",
                         dataType: "json",
                         type: "DELETE"
                     },
                     create: {
-                        url: "api/autors",
+                        url: "@Url.HttpRouteUrl("DefaultApi", new { controller="Autors"})",
                         dataType: "json",
                         type: "PUT"
                     },
