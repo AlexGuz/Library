@@ -1,0 +1,13 @@
+﻿@model dynamic
+@{
+    ViewBag.Title = "SaveToFile";
+}
+
+<h2>SaveToFile</h2>
+<div>
+    <pre>
+        The request information was saved in a file <b> @Model.Name </b>
+        File is located <em>@Model.Path</em>
+        @Html.ActionLink("Back to library", "Index", "Home")
+    </pre>
+</div>

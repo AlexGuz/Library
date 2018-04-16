@@ -9,9 +9,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Library.DAL", "Library.DAL\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Library.WEB.ViewModels", "Library.WEB.ViewModels\Library.WEB.ViewModels.csproj", "{92D91FEA-C957-4AD9-A1E7-F0DCE1051841}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Library.WEB.ApiControllers", "..\..\!!!!Обучение Исак\Library 1\Library.WEB.ApiControllers\Library.WEB.ApiControllers.csproj", "{BCE4A61B-5D15-4BF8-BA72-C1CF0EA5DC23}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Library.WEB.ApiControllers", "Library.WEB.ApiControllers\Library.WEB.ApiControllers.csproj", "{BCE4A61B-5D15-4BF8-BA72-C1CF0EA5DC23}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Library.WEB", "..\..\!!!!Обучение Исак\Library 1\Library.WEB\Library.WEB.csproj", "{ECE65F1A-02E2-48CF-84EA-EC665FB3C339}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Library.WEB", "Library.WEB\Library.WEB.csproj", "{ECE65F1A-02E2-48CF-84EA-EC665FB3C339}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
