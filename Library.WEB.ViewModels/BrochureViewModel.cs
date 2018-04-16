@@ -9,6 +9,5 @@
         public int AutorId { get; set; }
         public string Title { get; set; }
         public AutorViewModel Autor { get; set; }
-       
     }
 }

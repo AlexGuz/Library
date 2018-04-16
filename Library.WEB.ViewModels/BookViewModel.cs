@@ -8,6 +8,5 @@
         public int UnitId { get; set; }
         public AutorViewModel Autor { get; set; }
         public string Title { get; set; }
-        
     }
 }
